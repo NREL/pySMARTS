@@ -19,7 +19,86 @@ Please read the license and Readme files for more information, proper use, citin
     
 """
 
-def SMARTSSpectra(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE):
+def _material_to_code(material):
+    # Comments include Description, File name(.DAT extension), Reflection, Type*, Spectral range(?m), Category*
+    # *KEYS: L Lambertian, NL Non-Lambertian, SP Specular, M Manmade materials, S Soils and rocks, U User defined, V Vegetation, W Water, snow, or ice
+    material_map = { 'UsrLamb':     '0',  # User-defined spectral reflectance Albedo L Userdefined
+                     'UsrNLamb':    '1',  # User-defined spectral reflectance Albedo NL Userdefined
+                     'Water':       '2',  # Water or calm ocean (calculated) SP 0.284.0 W
+                     'Snow':        '3',  # Fresh dry snow Snow NL 0.32.48 W
+                     'Neve':        '4',  # Snow on a mountain neve Neve NL 0.451.65 W
+                     'Basalt':      '5',  # Basalt rock Basalt NL 0.32.48 S
+                     'Dry_sand':    '6',  # Dry sand Dry_sand NL 0.320.99 S
+                     'WiteSand':    '7',  # Sand from White Sands, NM WiteSand NL 0.52.48 S
+                     'Soil':        '8',  # Bare soil Soil NL 0.284.0 S
+                     'Dry_clay':    '9',  # Dry clay soil Dry_clay NL 0.52.48 S
+                     'Wet_clay':    '10', # Wet clay soil Wet_clay NL 0.52.48 S
+                     'Alfalfa':     '11', # Alfalfa Alfalfa NL 0.30.8 V
+                     'Grass':       '12', # Green grass Grass NL 0.31.19 V
+                     'RyeGrass':    '13', # Perennial rye grass RyeGrass NL 0.442.28 V
+                     'Meadow1':     '14', # Alpine meadow Meadow1 NL 0.40.85 V
+                     'Meadow2':     '15', # Lush meadow Meadow2 NL 0.40.9 V
+                     'Wheat':       '16', # Wheat crop Wheat NL 0.422.26 V
+                     'PineTree':    '17', # Ponderosa pine tree PineTree NL 0.342.48 V
+                     'Concrete':    '18', # Concrete slab Concrete NL 0.31.3 M
+                     'BlckLoam':    '19', # Black loam BlckLoam NL 0.44.0 S
+                     'BrwnLoam':    '20', # Brown loam BrwnLoam NL 0.44.0 S
+                     'BrwnSand':    '21', # Brown sand BrwnSand NL 0.44.0 S
+                     'Conifers':    '22', # Conifer trees Conifers NL 0.3024.0 V
+                     'DarkLoam':    '23', # Dark loam DarkLoam NL 0.46-4.0 S
+                     'DarkSand':    '24', # Dark sand DarkSand NL 0.44.0 S
+                     'Decidous':    '25', # Decidous trees Decidous NL 0.3024.0 V
+                     'DryGrass':    '26', # Dry grass (sod) DryGrass NL 0.384.0 V
+                     'DuneSand':    '27', # Dune sand DuneSand NL 0.44.0 S
+                     'FineSnow':    '28', # Fresh fine snow FineSnow NL 0.34.0 W
+                     'GrnGrass':    '29', # Green rye grass (sod) GrnGrass NL 0.3024.0 V
+                     'GrnlSnow':    '30', # Granular snow GrnlSnow NL 0.34.0 W
+                     'LiteClay':    '31', # Light clay LiteClay NL 0.44.0 S
+                     'LiteLoam':    '32', # Light loam LiteLoam NL 0.4314.0 S
+                     'LiteSand':    '33', # Light sand LiteSand NL 0.44.0 S
+                     'PaleLoam':    '34', # Pale loam PaleLoam NL 0.44.0 S
+                     'Seawater':    '35', # Sea water Seawater NL 2.0794.0 W
+                     'SolidIce':    '36', # Solid ice SolidIce NL 0.34.0 W
+                     'Dry_Soil':    '37', # Dry soil Dry_Soil NL 0.284.0 S
+                     'LiteSoil':    '38', # Light soil LiteSoil NL 0.284.0 S
+                     'RConcrte':    '39', # Old runway concrete RConcrte NL 0.34.0 M
+                     'RoofTile':    '40', # Terracota roofing clay tile RoofTile NL 0.34.0 M
+                     'RedBrick':    '41', # Red construction brick RedBrick NL 0.34.0 M
+                     'Asphalt':     '42', # Old runway asphalt Asphalt NL 0.34.0 M
+                     'TallCorn':    '43', # Tall green corn TallCorn NL 0.36-1.0 V
+                     'SndGravl':    '44', # Sand & gravel SndGravl NL 0.45-1.04 S
+                     'Fallow':      '45', # Fallow field Fallow NL 0.32-1.19 S
+                     'Birch':       '46', # Birch leaves Birch NL 0.36-2.48 V
+                     'WetSoil':     '47', # Wet sandy soil WetSSoil NL 0.48-2.48 S
+                     'Gravel':      '48', # Gravel Gravel NL 0.32-1.3 S
+                     'WetClay2':    '49', # Wet red clay WetClay2 NL 0.52-2.48 S
+                     'WetSilt':     '50', # Wet silt WetSilt NL 0.52-2.48 S
+                     'LngGrass':    '51', # Dry long grass LngGrass NL 0.277-2.976 V
+                     'LwnGrass':    '52', # Lawn grass (generic bluegrass) LwnGrass NL 0.305-2.944 V
+                     'OakTree':     '53', # Deciduous oak tree leaves OakTree NL 0.35-2.5 V
+                     'Pinion':      '54', # Pinion pinetree needles Pinion NL 0.301-2.592 V
+                     'MeltSnow':    '55', # Melting snow (slush) MeltSnow NL 0.35-2.5 W
+                     'Plywood':     '56', # Plywood sheet (new, pine, 4-ply) Plywood NL 0.35-2.5 M
+                     'WiteVinl':    '57', # White vinyl plastic sheet, 0.15 mm WiteVinl NL 0.35-2.5 M
+                     'FibrGlss':    '58', # Clear fiberglass greenhouse roofing FibrGlss NL 0.35-2.5 M
+                     'ShtMetal':    '59', # Galvanized corrugated sheet metal, new ShtMetal NL 0.35-2.5 M
+                     'Wetland':     '60', # Wetland vegetation canopy, Yellowstone Wetland NL 0.409-2.478 V
+                     'SageBrsh':    '61', # Sagebrush canopy, Yellowstone SageBrsh NL 0.409-2.478 V
+                     'FirTrees':    '62', # Fir trees, Colorado FirTrees NL 0.353-2.592 V
+                     'CSeaWatr':    '63', # Coastal seawater, Pacific CSeaWatr NL 0.277-2.976 W
+                     'OSeaWatr':    '64', # Open ocean seawater, Atlantic OSeaWatr NL 0.277-2.976 W
+                     'GrazingField':'65', # Grazing field (unfertilized) GrazingField NL 0.401-2.499 V
+                     'Spruce':      '66'  # Young Norway spruce tree (needles) Spruce NL 0.39-0.845 V
+                }
+
+    if not material:
+        return material_map.keys()
+    if material not in material_map:
+        print(f"Unknown material specified: '{material}'")
+        return None
+    return material_map.get(material)
+
+def SMARTSSpectra(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE, material='LiteSoil', min_wvl='280', max_wvl='4000'):
     r'''
     This function calculates a standard spectrum
     specified by IOUT, YEAR,MONTH,DAY,HOUR, LATIT, LONGIT
@@ -106,6 +185,7 @@ def SMARTSSpectra(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE):
            9/14 - Creation of wrapper. J.Russo
            06/18 - Set Lat and Long as inputs. S. Ayala.
            01/20 - Ported to python S. Ayala
+           08/20 - Allow configured ground material and wavelength range M. Monarch
     '''
     
     ## Card 1: Comment
@@ -339,89 +419,8 @@ def SMARTSSpectra(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE):
     TAU550 = '' #if ITURB == 5
     
     ## Card 10: Far Field Albedo for backscattering
-    IALBDX = '38'
-    
-                            # IALBX Code, Description File name(.DAT extension), Reflection, Type*, Spectral range(?m), Category*
-                            # -1 Fixed broadband albedo  L 0.284.0 U
-                            # 0 User-defined spectral reflectance Albedo L Userdefined
-                            # U
-                            # 1 User-defined spectral reflectance Albedo NL Userdefined
-                            # U
-                            # 2 Water or calm ocean (calculated) SP 0.284.0 W
-                            # 3 Fresh dry snow Snow NL 0.32.48 W
-                            # 4 Snow on a mountain neve Neve NL 0.451.65 W
-                            # 5 Basalt rock Basalt NL 0.32.48 S
-                            # 6 Dry sand Dry_sand NL 0.320.99 S
-                            # 7 Sand from White Sands, NM WiteSand NL 0.52.48 S
-                            # 8 Bare soil Soil NL 0.284.0 S
-                            # 9 Dry clay soil Dry_clay NL 0.52.48 S
-                            # 10 Wet clay soil Wet_clay NL 0.52.48 S
-                            # 11 Alfalfa Alfalfa NL 0.30.8 V
-                            # 12 Green grass Grass NL 0.31.19 V
-                            # 13 Perennial rye grass RyeGrass NL 0.442.28 V
-                            # 14 Alpine meadow Meadow1 NL 0.40.85 V
-                            # 15 Lush meadow Meadow2 NL 0.40.9 V
-                            # 16 Wheat crop Wheat NL 0.422.26 V
-                            # 17 Ponderosa pine tree PineTree NL 0.342.48 V
-                            # 18 Concrete slab Concrete NL 0.31.3 M
-                            # 19 Black loam BlckLoam NL 0.44.0 S
-                            # 20 Brown loam BrwnLoam NL 0.44.0 S
-                            # 21 Brown sand BrwnSand NL 0.44.0 S
-                            # 22 Conifer trees Conifers NL 0.3024.0 V
-                            # 23 Dark loam DarkLoam NL 0.46-4.0 S
-                            # 24 Dark sand DarkSand NL 0.44.0 S
-                            # 25 Decidous trees Decidous NL 0.3024.0 V
-                            # 26 Dry grass (sod) DryGrass NL 0.384.0 V
-                            # 27 Dune sand DuneSand NL 0.44.0 S
-                            # 28 Fresh fine snow FineSnow NL 0.34.0 W
-                            # 29 Green rye grass (sod) GrnGrass NL 0.3024.0 V
-                            # 30 Granular snow GrnlSnow NL 0.34.0 W
-                            # 31 Light clay LiteClay NL 0.44.0 S
-                            # 32 Light loam LiteLoam NL 0.4314.0 S
-                            # 33 Light sand LiteSand NL 0.44.0 S
-                            # 34 Pale loam PaleLoam NL 0.44.0 S
-                            # 35 Sea water Seawater NL 2.0794.0 W
-                            # 36 Solid ice SolidIce NL 0.34.0 W
-                            # 37 Dry soil Dry_Soil NL 0.284.0 S
-                            # 38 Light soil LiteSoil NL 0.284.0 S
-                            # 39 Old runway concrete RConcrte NL 0.34.0 M
-                            # 40 Terracota roofing clay tile RoofTile NL 0.34.0 M
-                            # 41 Red construction brick RedBrick NL 0.34.0 M
-                            # 42 Old runway asphalt Asphalt NL 0.34.0 M
-                            # 43 Tall green corn TallCorn NL 0.36-1.0 V
-                            # 18
-                            # 44 Sand & gravel SndGravl NL 0.45-1.04 S
-                            # 45 Fallow field Fallow NL 0.32-1.19 S
-                            # 46 Birch leaves Birch NL 0.36-2.48 V
-                            # 47 Wet sandy soil WetSSoil NL 0.48-2.48 S
-                            # 48 Gravel Gravel NL 0.32-1.3 S
-                            # 49 Wet red clay WetClay2 NL 0.52-2.48 S
-                            # 50 Wet silt WetSilt NL 0.52-2.48 S
-                            # 51 Dry long grass LngGrass NL 0.277-2.976 V
-                            # 52 Lawn grass (generic bluegrass) LwnGrass NL 0.305-2.944 V
-                            # 53 Deciduous oak tree leaves OakTree NL 0.35-2.5 V
-                            # 54 Pinion pinetree needles Pinion NL 0.301-2.592 V
-                            # 55 Melting snow (slush) MeltSnow NL 0.35-2.5 W
-                            # 56 Plywood sheet (new, pine, 4-ply) Plywood NL 0.35-2.5 M
-                            # 57 White vinyl plastic sheet, 0.15 mm WiteVinl NL 0.35-2.5 M
-                            # 58 Clear fiberglass greenhouse roofing FibrGlss NL 0.35-2.5 M
-                            # 59 Galvanized corrugated sheet metal, new ShtMetal NL 0.35-2.5 M
-                            # 60 Wetland vegetation canopy, Yellowstone Wetland NL 0.409-2.478 V
-                            # 61 Sagebrush canopy, Yellowstone SageBrsh NL 0.409-2.478 V
-                            # 62 Fir trees, Colorado FirTrees NL 0.353-2.592 V
-                            # 63 Coastal seawater, Pacific CSeaWatr NL 0.277-2.976 W
-                            # 64 Open ocean seawater, Atlantic OSeaWatr NL 0.277-2.976 W
-                            # 65 Grazing field (unfertilized) GrazingField NL 0.401-2.499 V
-                            # 66 Young Norway spruce tree (needles) Spruce NL 0.39-0.845 V
-                            # *KEY
-                            # L Lambertian
-                            # NL Non-Lambertian
-                            # SP Specular
-                            # M Manmade materials
-                            # S Soils and rocks
-                            # U User defined
-                            # V Vegetation
-                            # W Water, snow, or ice
+    IALBDX = _material_to_code(material)
+
     # Card 10a:
     RHOX = ''
                             # Zonal broadband Lambertian ground albedo (for backscattering calculations); must
@@ -451,8 +450,8 @@ def SMARTSSpectra(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE):
     RHOG = ''
     
     ## Card 11: Spectral range for all Calculations
-    WLMN = '280' #Min wavelength
-    WLMX = '4000' #Max wavelength
+    WLMN = min_wvl #Min wavelength
+    WLMX = max_wvl #Max wavelength
     SUNCOR = '1.0' 
         #Correction factor for irradiance is a correction factor equal to the inverse squared actual radius vector, or true Sun-Earth
         # distance; e.g., SUNCOR = 1.024.
@@ -575,10 +574,7 @@ def SMARTSSpectra(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE):
     return output
 
 
-def SMARTSAlbedoSpectra(material=None,WLMN='280',WLMX='4000',INTVL='0.5',
-                        use_zenith_azimuth=True,ZENITH='0',AZIM='180.',
-                        YEAR='',MONTH='',DAY='',HOUR='',LATIT='',LONGIT='',
-                        ALTIT='',ZONE=''):
+def SMARTSSpectraZenAzm(IOUT, ZENITH, AZIM, material='LiteSoil', min_wvl='280', max_wvl='4000'):
     r'''
     This function calculates the spectral albedo for a given material. If no 
     material is provided, the function will return a list of all valid 
@@ -630,7 +626,7 @@ def SMARTSAlbedoSpectra(material=None,WLMN='280',WLMX='4000',INTVL='0.5',
         column representing albedo of specified material at the wavelength
     
     Updates:
-           6/20 Creation of second function to retreive albedo
+           6/20 Creation of second function to use zenith and azimuth M. Monarch
     '''
 
     ## Card 1: Comment
@@ -864,84 +860,7 @@ def SMARTSAlbedoSpectra(material=None,WLMN='280',WLMX='4000',INTVL='0.5',
     TAU550 = '' #if ITURB == 5
     
     ## Card 10: Far Field Albedo for backscattering
-    # Comments include Description, File name(.DAT extension), Reflection, Type*, Spectral range(?m), Category*
-    # *KEYS: L Lambertian, NL Non-Lambertian, SP Specular, M Manmade materials, S Soils and rocks, U User defined, V Vegetation, W Water, snow, or ice
-    material_map = { 'UsrLamb':     '0',  # User-defined spectral reflectance Albedo L Userdefined
-                     'UsrNLamb':    '1',  # User-defined spectral reflectance Albedo NL Userdefined
-                     'Water':       '2',  # Water or calm ocean (calculated) SP 0.284.0 W
-                     'Snow':        '3',  # Fresh dry snow Snow NL 0.32.48 W
-                     'Neve':        '4',  # Snow on a mountain neve Neve NL 0.451.65 W
-                     'Basalt':      '5',  # Basalt rock Basalt NL 0.32.48 S
-                     'Dry_sand':    '6',  # Dry sand Dry_sand NL 0.320.99 S
-                     'WiteSand':    '7',  # Sand from White Sands, NM WiteSand NL 0.52.48 S
-                     'Soil':        '8',  # Bare soil Soil NL 0.284.0 S
-                     'Dry_clay':    '9',  # Dry clay soil Dry_clay NL 0.52.48 S
-                     'Wet_clay':    '10', # Wet clay soil Wet_clay NL 0.52.48 S
-                     'Alfalfa':     '11', # Alfalfa Alfalfa NL 0.30.8 V
-                     'Grass':       '12', # Green grass Grass NL 0.31.19 V
-                     'RyeGrass':    '13', # Perennial rye grass RyeGrass NL 0.442.28 V
-                     'Meadow1':     '14', # Alpine meadow Meadow1 NL 0.40.85 V
-                     'Meadow2':     '15', # Lush meadow Meadow2 NL 0.40.9 V
-                     'Wheat':       '16', # Wheat crop Wheat NL 0.422.26 V
-                     'PineTree':    '17', # Ponderosa pine tree PineTree NL 0.342.48 V
-                     'Concrete':    '18', # Concrete slab Concrete NL 0.31.3 M
-                     'BlckLoam':    '19', # Black loam BlckLoam NL 0.44.0 S
-                     'BrwnLoam':    '20', # Brown loam BrwnLoam NL 0.44.0 S
-                     'BrwnSand':    '21', # Brown sand BrwnSand NL 0.44.0 S
-                     'Conifers':    '22', # Conifer trees Conifers NL 0.3024.0 V
-                     'DarkLoam':    '23', # Dark loam DarkLoam NL 0.46-4.0 S
-                     'DarkSand':    '24', # Dark sand DarkSand NL 0.44.0 S
-                     'Decidous':    '25', # Decidous trees Decidous NL 0.3024.0 V
-                     'DryGrass':    '26', # Dry grass (sod) DryGrass NL 0.384.0 V
-                     'DuneSand':    '27', # Dune sand DuneSand NL 0.44.0 S
-                     'FineSnow':    '28', # Fresh fine snow FineSnow NL 0.34.0 W
-                     'GrnGrass':    '29', # Green rye grass (sod) GrnGrass NL 0.3024.0 V
-                     'GrnlSnow':    '30', # Granular snow GrnlSnow NL 0.34.0 W
-                     'LiteClay':    '31', # Light clay LiteClay NL 0.44.0 S
-                     'LiteLoam':    '32', # Light loam LiteLoam NL 0.4314.0 S
-                     'LiteSand':    '33', # Light sand LiteSand NL 0.44.0 S
-                     'PaleLoam':    '34', # Pale loam PaleLoam NL 0.44.0 S
-                     'Seawater':    '35', # Sea water Seawater NL 2.0794.0 W
-                     'SolidIce':    '36', # Solid ice SolidIce NL 0.34.0 W
-                     'Dry_Soil':    '37', # Dry soil Dry_Soil NL 0.284.0 S
-                     'LiteSoil':    '38', # Light soil LiteSoil NL 0.284.0 S
-                     'RConcrte':    '39', # Old runway concrete RConcrte NL 0.34.0 M
-                     'RoofTile':    '40', # Terracota roofing clay tile RoofTile NL 0.34.0 M
-                     'RedBrick':    '41', # Red construction brick RedBrick NL 0.34.0 M
-                     'Asphalt':     '42', # Old runway asphalt Asphalt NL 0.34.0 M
-                     'TallCorn':    '43', # Tall green corn TallCorn NL 0.36-1.0 V
-                     'SndGravl':    '44', # Sand & gravel SndGravl NL 0.45-1.04 S
-                     'Fallow':      '45', # Fallow field Fallow NL 0.32-1.19 S
-                     'Birch':       '46', # Birch leaves Birch NL 0.36-2.48 V
-                     'WetSoil':     '47', # Wet sandy soil WetSSoil NL 0.48-2.48 S
-                     'Gravel':      '48', # Gravel Gravel NL 0.32-1.3 S
-                     'WetClay2':    '49', # Wet red clay WetClay2 NL 0.52-2.48 S
-                     'WetSilt':     '50', # Wet silt WetSilt NL 0.52-2.48 S
-                     'LngGrass':    '51', # Dry long grass LngGrass NL 0.277-2.976 V
-                     'LwnGrass':    '52', # Lawn grass (generic bluegrass) LwnGrass NL 0.305-2.944 V
-                     'OakTree':     '53', # Deciduous oak tree leaves OakTree NL 0.35-2.5 V
-                     'Pinion':      '54', # Pinion pinetree needles Pinion NL 0.301-2.592 V
-                     'MeltSnow':    '55', # Melting snow (slush) MeltSnow NL 0.35-2.5 W
-                     'Plywood':     '56', # Plywood sheet (new, pine, 4-ply) Plywood NL 0.35-2.5 M
-                     'WiteVinl':    '57', # White vinyl plastic sheet, 0.15 mm WiteVinl NL 0.35-2.5 M
-                     'FibrGlss':    '58', # Clear fiberglass greenhouse roofing FibrGlss NL 0.35-2.5 M
-                     'ShtMetal':    '59', # Galvanized corrugated sheet metal, new ShtMetal NL 0.35-2.5 M
-                     'Wetland':     '60', # Wetland vegetation canopy, Yellowstone Wetland NL 0.409-2.478 V
-                     'SageBrsh':    '61', # Sagebrush canopy, Yellowstone SageBrsh NL 0.409-2.478 V
-                     'FirTrees':    '62', # Fir trees, Colorado FirTrees NL 0.353-2.592 V
-                     'CSeaWatr':    '63', # Coastal seawater, Pacific CSeaWatr NL 0.277-2.976 W
-                     'OSeaWatr':    '64', # Open ocean seawater, Atlantic OSeaWatr NL 0.277-2.976 W
-                     'GrazingField':'65', # Grazing field (unfertilized) GrazingField NL 0.401-2.499 V
-                     'Spruce':      '66'  # Young Norway spruce tree (needles) Spruce NL 0.39-0.845 V
-                }
-    
-    if not material:
-        return material_map.keys()
-    elif material not in material_map:
-        print(f"Unknown material specified: '{material}'")
-        return
-    else:
-        IALBDX = material_map.get(material)
+    IALBDX = _material_to_code(material)
     
     # Card 10a:
     RHOX = ''
@@ -951,7 +870,7 @@ def SMARTSAlbedoSpectra(material=None,WLMN='280',WLMX='4000',INTVL='0.5',
     # Card 10b: ITILT is an option for tilted surface calculations. 
     #Select ITILT= 0 for no such calculation, 
     #ITILT = 1 to initiate these calculations using information on Card 10c.
-    ITILT = '0'
+    ITILT = '1'
     
     # Card 10c:
     # IALBDG is identical to IALBDX (see Card 10) except that it relates to the foreground local
@@ -962,9 +881,9 @@ def SMARTSAlbedoSpectra(material=None,WLMN='280',WLMX='4000',INTVL='0.5',
     # WAZIM: Surface azimuth (0 to 360 decimal deg.) counted clockwise from North; e.g., 270
     # deg. for a surface facing West. Use -999 for a sun-tracking surface.
     
-    IALBDG = ''
-    TILT = ''
-    WAZIM = ''
+    IALBDG = IALBDX 
+    TILT = '0.'
+    WAZIM = '180.'
     
     # Card 10d:
     # RHOG: Local broadband Lambertian foreground albedo (for tilted plane calculations), Card
@@ -972,8 +891,8 @@ def SMARTSAlbedoSpectra(material=None,WLMN='280',WLMX='4000',INTVL='0.5',
     RHOG = ''
     
     ## Card 11: Spectral range for all Calculations
-    #WLMN = '280' #Min wavelength
-    #WLMX = '4000' #Max wavelength
+    WLMN = min_wvl #Min wavelength
+    WLMX = max_wvl #Max wavelength
     SUNCOR = '1.0' 
         #Correction factor for irradiance is a correction factor equal to the inverse squared actual radius vector, or true Sun-Earth
         # distance; e.g., SUNCOR = 1.024.
@@ -1001,14 +920,14 @@ def SMARTSAlbedoSpectra(material=None,WLMN='280',WLMX='4000',INTVL='0.5',
     # calculation...
     WPMN = WLMN
     WPMX = WLMX
-    #INTVL = '.5'
+    INTVL = '.5'
     
     # Card 12b: Total number of output variables:
     #IOTOT = XXX #This is determined with the input of this function
     
     # Card 12c: Variables to output selection 
     #(space separated numbers 1-43 according to the table below:
-    IOUT = '30'
+    #IOUT = '30 31'
     
     
     ## Card 13: Circumsolar Calculation
@@ -1067,10 +986,8 @@ def SMARTSAlbedoSpectra(material=None,WLMN='280',WLMX='4000',INTVL='0.5',
     # 2, if input is to be AMASS on Card 17a
     # 3, if inputs are to be YEAR, MONTH, DAY, HOUR, LATIT, LONGIT, ZONE on Card 17a
     # 4, if inputs are to be MONTH, LATIT, DSTEP on Card 17a (for a daily calculation).
-    if use_zenith_azimuth:
-        IMASS = '0'
-    else:
-        IMASS = '3'
+    IMASS = '0'
+
     
     # Card 17a: IMASS = 0 Zenith and azimuth
     #ZENITH = ''
@@ -1083,13 +1000,13 @@ def SMARTSAlbedoSpectra(material=None,WLMN='280',WLMX='4000',INTVL='0.5',
     AMASS = ''
     
     # Card 17a: IMASS = 3 Input date, time and coordinates
-    #YEAR = '2014'
-    #MONTH = '3'
-    #DAY = '12'
-    #HOUR = '7'
-    #LATIT = '32.'
-    #LONGIT = '-110.92'
-    #ZONE = '-7'
+    YEAR = ''
+    MONTH = ''
+    DAY = ''
+    HOUR = ''
+    LATIT = ''
+    LONGIT = ''
+    ZONE = ''
     
     # Card 17a: IMASS = 4 Input Moth, Latitude and DSTEP
     DSTEP = ''
@@ -1118,7 +1035,13 @@ def _smartsAll(CMNT, ISPR, SPR, ALTIT, HEIGHT, LATIT, IATMOS, ATMOS, RH, TAIR, S
     import os
     import pandas as pd
     import subprocess
-
+    
+    # Check if SMARTSPATH environment variable exists and change working
+    # directory if it does.
+    original_wd = None
+    if 'SMARTSPATH' in os.environ:
+        original_wd = os.getcwd()
+        os.chdir(os.environ['SMARTSPATH'])
     
     try:
         os.remove('smarts295.inp.txt')
@@ -1377,7 +1300,7 @@ def _smartsAll(CMNT, ISPR, SPR, ALTIT, HEIGHT, LATIT, IATMOS, ATMOS, RH, TAIR, S
     ## Run SMARTS 2.9.5
     #dump = os.system('smarts295bat.exe')
     command = "smarts295bat.exe"
-    p = subprocess.Popen(command, stdin=subprocess.PIPE, shell=True)
+    p = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=open("output.txt", "w"), shell=True)
     p.wait()
     
     ## Read SMARTS 2.9.5 Output File
@@ -1400,5 +1323,9 @@ def _smartsAll(CMNT, ISPR, SPR, ALTIT, HEIGHT, LATIT, IATMOS, ATMOS, RH, TAIR, S
         os.remove('smarts295.scn.txt')
     except:
         print("") 
+    
+    # Return to original working directory.    
+    if original_wd:
+        os.chdir(original_wd)
 
     return data
