@@ -90,7 +90,7 @@ def _material_to_code(material):
                      'GrazingField':'65', # Grazing field (unfertilized) GrazingField NL 0.401-2.499 V
                      'Spruce':      '66'  # Young Norway spruce tree (needles) Spruce NL 0.39-0.845 V
                 }
-
+    
     if not material:
         return material_map.keys()
     if material not in material_map:
@@ -420,7 +420,7 @@ def SMARTSSpectra(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE, material
     
     ## Card 10: Far Field Albedo for backscattering
     IALBDX = _material_to_code(material)
-
+    
     # Card 10a:
     RHOX = ''
                             # Zonal broadband Lambertian ground albedo (for backscattering calculations); must
@@ -1299,13 +1299,22 @@ def _smartsAll(CMNT, ISPR, SPR, ALTIT, HEIGHT, LATIT, IATMOS, ATMOS, RH, TAIR, S
     
     ## Run SMARTS 2.9.5
     #dump = os.system('smarts295bat.exe')
-    command = "smarts295bat.exe"
-    p = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=open("output.txt", "w"), shell=True)
-    p.wait()
-    
-    ## Read SMARTS 2.9.5 Output File
-    
-    data = pd.read_csv('smarts295.ext.txt', delim_whitespace=True)    
+    commands = ['smarts295bat', 'smarts295bat.exe']
+    command = None
+    for cmd in commands:
+        if os.path.exists(cmd):
+            command = cmd
+            break
+
+    if not command:
+        print('Could not find SMARTS2 executable.')
+        data = None
+    else:
+        p = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=open("output.txt", "w"), shell=True)
+        p.wait()
+        
+        ## Read SMARTS 2.9.5 Output File
+        data = pd.read_csv('smarts295.ext.txt', delim_whitespace=True)    
 
     try:
         os.remove('smarts295.inp.txt')
