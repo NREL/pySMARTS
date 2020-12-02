@@ -100,61 +100,30 @@ def _material_to_code(material):
 
 def SMARTSSpectra(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE, material='LiteSoil', min_wvl='280', max_wvl='4000'):
     r'''
-    This function calculates a standard spectrum
-    specified by IOUT, YEAR,MONTH,DAY,HOUR, LATIT, LONGIT
-    
-    Example to get Direct and Diffuse Spectra :  
-           E_theor=SMARTSSpectra('2 3','2001','6','21','12','32.','-110.92')
-    
-    IMPORTANT: Latit must end with a period. i.e. '32.'
+    This function calculates the spectral albedo for a given material. If no 
+    material is provided, the function will return a list of all valid 
+    materials.
 
     Parameters
-    ----------    
-    IOUT: String
-        Specifications: specifiying the desired spectrum output separated by space:
-            1 Extraterrestrial spectrum W m-2
-            2 Direct normal irradiance W m-2
-            3 Diffuse horizontal irradiance W m-2
-            4 Global horizontal irradiance W m-2
-            5 Direct horizontal irradiance W m-2
-            6 Direct tilted irradiance W m-2
-            7 Diffuse tilted irradiance W m-2
-            8 Global tilted irradiance W m-2
-            9 Experimental direct normal irradiance (with circumsolar) W m-2
-            10 Experimental diffuse horizontal irradiance W m-2
-            11 Circumsolar irradiance within radiometer field of view W m-2
-            12* Global tilted photon flux per wavelength cm-2 s-1 nm-1
-            13 Direct normal photon flux per wavelength cm-2 s-1 nm-1
-            14 Diffuse horizontal photon flux per wavelength cm-2 s-1 nm-1
-            15 Rayleigh transmittance 
-            16 Ozone transmittance 
-            17 Transmittance from all trace gases 
-            18 Water vapor transmittance 
-            19 Mixed gas transmittance 
-            20 Aerosol transmittance 
-            21 Beam radiation transmittance 
-            22 Rayleigh optical thickness 
-            23 Ozone optical thickness 
-            24 Optical thickness from all trace gases 
-            25 Water vapor optical thickness 
-            26 Mixed gas optical thickness 
-            27 Aerosol optical thickness 
-            28 Aerosol single scattering albedo 
-            29 Aerosol asymmetry factor 
-            30 Zonal surface reflectance 
-            31 Local ground reflectance 
-            32 Atmospheric reflectance 
-            33* Global foreground reflected irradiance on tilted surface W m-2
-            34* Upward hemispheric ground-reflected irradiance W m-2
-            35* Global horizontal photosynthetic photon flux ?mol m-2 s-1 nm-1
-            36* Direct normal photosynthetic photon flux ?mol m-2 s-1 nm-1
-            37* Diffuse horizontal photosynthetic photon flux ?mol m-2 s-1 nm-1
-            38* Global tilted photosynthetic photon flux ?mol m-2 s-1 nm-1
-            39* Spectral photonic energy eV
-            40* Global horizontal photon flux per eV cm-2 s-1 eV-1
-            41* Direct normal photon flux per eV cm-2 s-1 eV-1
-            42* Diffuse horizontal photon flux per eV cm-2 s-1 eV-1
-            43* Global tilted photon flux per eV cm-2 s-1 eV-1 
+    ----------
+    material : string
+        Unique identifier for ground cover. Pass None to retreive a list of
+        all valid materials.
+    WLMN : string
+        Minimum wavelength to retreive
+    WLMX : string
+        Maximum wavelength to retreive
+    INTVL : string
+        The resolution of the returned wavelengths. Note different regions have
+        different maximum resolutions.
+    use_zenith_azimuth : boolean
+        Selection to determine what parameters set solar position and air mass
+        calculations. Pass True to use zenith and azimuth and False to use
+        year, month, day, hour, lat., long., alt., and timezone.
+    ZENITH : string
+        Zenith angle of sun
+    AZIM : string
+        Azimuth of sun
     YEAR : string
         Year
     MONTH : string
@@ -162,13 +131,13 @@ def SMARTSSpectra(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE, material
     DAY : string
         Day
     HOUR : string
-        Hour, in 24 hour format. 
+        Hour, in 24 hour format.
     LATIT : string
         Latitude of the location, Latit must end with a period. i.e. '32.'
     LONGIT : string
         Longitude of the location.
     ALTIT : string
-         elevation of the ground surface above sea level [km]
+        elevation of the ground surface above sea level [km]
     ZONE : string
         Timezone
         
@@ -177,17 +146,13 @@ def SMARTSSpectra(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE, material
     Returns
     -------
     data : pandas
-        MAtrix with (:,1) elements being wavelength in nm and
-        (:,2) elements being the spectrum in the units as specified above.
-         status (string) with error string.
+        Matrix with first column representing wavelength (in nm) and second
+        column representing albedo of specified material at the wavelength
     
-     Updates:
-           9/14 - Creation of wrapper. J.Russo
-           06/18 - Set Lat and Long as inputs. S. Ayala.
-           01/20 - Ported to python S. Ayala
-           08/20 - Allow configured ground material and wavelength range M. Monarch
+    Updates:
+           6/20 Creation of second function to use zenith and azimuth M. Monarch
     '''
-    
+
     ## Card 1: Comment
     CMNT = 'ASTMG173-03 (AM1.5 Standard)'
     
@@ -219,7 +184,7 @@ def SMARTSSpectra(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE, material
     # The total ALTIT + HEIGHT is the altitude of the simulated object above sea level and
     # must be ? 100 km.
     
-    # ALTIT = '0.805' #km
+    ALTIT = ALTIT
     HEIGHT = '0'
     #LATIT = '32.' #dec degs END WITH DOT
     
@@ -440,8 +405,8 @@ def SMARTSSpectra(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE, material
     # WAZIM: Surface azimuth (0 to 360 decimal deg.) counted clockwise from North; e.g., 270
     # deg. for a surface facing West. Use -999 for a sun-tracking surface.
     
-    IALBDG = IALBDX
-    TILT = LATIT
+    IALBDG = IALBDX 
+    TILT = '0.'
     WAZIM = '180.'
     
     # Card 10d:
@@ -486,7 +451,7 @@ def SMARTSSpectra(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE, material
     
     # Card 12c: Variables to output selection 
     #(space separated numbers 1-43 according to the table below:
-    #IOUT = XXXXXXX #This IS THE INPUT OF THIS FUNCTION.
+    IOUT = IOUT
     
     
     ## Card 13: Circumsolar Calculation
@@ -546,6 +511,7 @@ def SMARTSSpectra(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE, material
     # 3, if inputs are to be YEAR, MONTH, DAY, HOUR, LATIT, LONGIT, ZONE on Card 17a
     # 4, if inputs are to be MONTH, LATIT, DSTEP on Card 17a (for a daily calculation).
     IMASS = '3'
+
     
     # Card 17a: IMASS = 0 Zenith and azimuth
     ZENITH = ''
@@ -558,13 +524,13 @@ def SMARTSSpectra(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE, material
     AMASS = ''
     
     # Card 17a: IMASS = 3 Input date, time and coordinates
-    #YEAR = '2014'
-    #MONTH = '3'
-    #DAY = '12'
-    #HOUR = '7'
-    #LATIT = '32.'
-    #LONGIT = '-110.92'
-    #ZONE = '-7'
+    YEAR = YEAR
+    MONTH = MONTH
+    DAY = DAY
+    HOUR = HOUR
+    LATIT = LATIT
+    LONGIT = LONGIT
+    ZONE = ZONE
     
     # Card 17a: IMASS = 4 Input Moth, Latitude and DSTEP
     DSTEP = ''
@@ -572,6 +538,7 @@ def SMARTSSpectra(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE, material
     output = _smartsAll(CMNT, ISPR, SPR, ALTIT, HEIGHT, LATIT, IATMOS, ATMOS, RH, TAIR, SEASON, TDAY, IH2O, W, IO3, IALT, AbO3, IGAS, ILOAD, ApCH2O, ApCH4, ApCO, ApHNO2, ApHNO3, ApNO,ApNO2, ApNO3, ApO3, ApSO2, qCO2, ISPCTR, AEROS, ALPHA1, ALPHA2, OMEGL, GG, ITURB, TAU5, BETA, BCHUEP, RANGE, VISI, TAU550, IALBDX, RHOX, ITILT, IALBDG,TILT, WAZIM,  RHOG, WLMN, WLMX, SUNCOR, SOLARC, IPRT, WPMN, WPMX, INTVL, IOUT, ICIRC, SLOPE, APERT, LIMIT, ISCAN, IFILT, WV1, WV2, STEP, FWHM, ILLUM,IUV, IMASS, ZENITH, AZIM, ELEV, AMASS, YEAR, MONTH, DAY, HOUR, LONGIT, ZONE, DSTEP)
 
     return output
+
 
 
 def SMARTSSpectraZenAzm(IOUT, ZENITH, AZIM, material='LiteSoil', min_wvl='280', max_wvl='4000'):
@@ -1016,8 +983,9 @@ def SMARTSSpectraZenAzm(IOUT, ZENITH, AZIM, material='LiteSoil', min_wvl='280', 
     return output
 
 
+
 def SMARTSTMY3(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE, RHOG,
-               W, RH, TAIR, SEASON, TDAY, SPR, HEIGHT=0,
+               W, RH, TAIR, SEASON, TDAY, SPR, HEIGHT='0',
                material='DryGrass', min_wvl='280', max_wvl='4000'):
 
     r'''
@@ -1090,7 +1058,7 @@ def SMARTSTMY3(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE, RHOG,
     
     '''
 
-    if ALTIT > 800:
+    if float(ALTIT) > 800:
         print("Altitude should be in km. Are you in Mt. Everest or above or",
               "using meters? This might fail but we'll attempt to continue.")
     
@@ -1484,7 +1452,7 @@ def SMARTSTMY3(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE, RHOG,
 
 def SMARTSSRRL(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE, 
                W, RH, TAIR, SEASON, TDAY, SPR, TAU5, TILT, WAZIM,
-               RHOG, HEIGHT=0, 
+               RHOG, HEIGHT='0', 
                material='DryGrass', min_wvl='280', max_wvl='4000'):
 
     r'''
@@ -1567,7 +1535,7 @@ def SMARTSSRRL(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE,
     
     '''
 
-    if ALTIT > 800:
+    if float(ALTIT) > 800:
         print("Altitude should be in km. Are you in Mt. Everest or above or",
               "using meters? This might fail but we'll attempt to continue.")
     
@@ -1658,7 +1626,7 @@ def SMARTSSRRL(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE,
     # Card 4a: (if IH2O = 0): W is precipitable water above the site altitude
     # in units of cm, or equivalently, g/cm2; it must be ? 12.
     
-    W = tmy_W
+    W = W
     
     ## Card 5: IO3 is an option to select the appropriate ozone abundance input.
     # IO3 = 0 to input IALT and AbO3 on Card 5a
