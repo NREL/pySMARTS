@@ -307,7 +307,7 @@ def SMARTSSpectra(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE, material
     ApSO2 =''
     
     ## Card 7 qCO2 carbon dioxide columnar volumetric concentration (ppmv).
-    qCO2 = '0'
+    qCO2 = '0.0'
     
     # Card 7a ISPCTR 
     # is an option to select the proper extraterrestrial
@@ -729,7 +729,7 @@ def SMARTSSpectraZenAzm(IOUT, ZENITH, AZIM, material='LiteSoil', SPR='1013.25', 
     ApSO2 =''
     
     ## Card 7 qCO2 carbon dioxide columnar volumetric concentration (ppmv).
-    qCO2 = '0'
+    qCO2 = '0.0'
     
     # Card 7a ISPCTR 
     # is an option to select the proper extraterrestrial
@@ -1106,7 +1106,7 @@ def SMARTSTMY3(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE, RHOG,
     # Card 4a: (if IH2O = 0): W is precipitable water above the site altitude
     # in units of cm, or equivalently, g/cm2; it must be ? 12.
     
-    W = tmy_W
+    W = W
     
     ## Card 5: IO3 is an option to select the appropriate ozone abundance input.
     # IO3 = 0 to input IALT and AbO3 on Card 5a
@@ -1185,7 +1185,7 @@ def SMARTSTMY3(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE, RHOG,
     ApSO2 =''
     
     ## Card 7 qCO2 carbon dioxide columnar volumetric concentration (ppmv).
-    qCO2 = '0'
+    qCO2 = '0.0'
     
     # Card 7a ISPCTR 
     # is an option to select the proper extraterrestrial
@@ -1486,7 +1486,7 @@ def SMARTSSRRL(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE,
               "using meters? This might fail but we'll attempt to continue.")
     
     ## Card 1: Comment
-    CMNT = 'TMY Parameters Spectra'
+    CMNT = 'SRRL Spectra'    
     
     ## Card 2: ISPR is an option for sites pressure.
     # ISPR = 0 to input SPR on Card 2a
@@ -1650,8 +1650,7 @@ def SMARTSSRRL(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE,
     ApSO2 =''
     
     ## Card 7 qCO2 carbon dioxide columnar volumetric concentration (ppmv).
-    qCO2 = '0'
-    qCO2 = ''   #SIL: Trying to see if there is a default.
+    qCO2 = '0.0'
     
     # Card 7a ISPCTR 
     # is an option to select the proper extraterrestrial
@@ -1738,7 +1737,7 @@ def SMARTSSRRL(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE,
     # WAZIM: Surface azimuth (0 to 360 decimal deg.) counted clockwise from North; e.g., 270
     # deg. for a surface facing West. Use -999 for a sun-tracking surface.
     
-    IALBDG = '-1' 
+    IALBDG = '-1'
     TILT = TILT
     WAZIM = WAZIM
     
@@ -1783,7 +1782,7 @@ def SMARTSSRRL(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE,
     
     # Card 12c: Variables to output selection 
     #(space separated numbers 1-43 according to the table below:
-    #IOUT = '30 31'
+    IOUT = IOUT
     
     
     ## Card 13: Circumsolar Calculation
