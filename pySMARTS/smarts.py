@@ -133,7 +133,7 @@ def SMARTSSpectra(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE, material
     HOUR : string
         Hour, in 24 hour format.
     LATIT : string
-        Latitude of the location, Latit must end with a period. i.e. '32.'
+        Latitude of the location.
     LONGIT : string
         Longitude of the location.
     ALTIT : string
@@ -186,7 +186,7 @@ def SMARTSSpectra(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE, material
     
     ALTIT = ALTIT
     HEIGHT = '0'
-    #LATIT = '32.' #dec degs END WITH DOT
+    #LATIT = LATIT 
     
     ## Card 3: IATMOS is an option to select the proper default atmosphere
     # Its value can be either 0 or 1.
@@ -406,8 +406,8 @@ def SMARTSSpectra(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE, material
     # deg. for a surface facing West. Use -999 for a sun-tracking surface.
     
     IALBDG = IALBDX 
-    TILT = '0.'
-    WAZIM = '180.'
+    TILT = '0.0'
+    WAZIM = '180.0'
     
     # Card 10d:
     # RHOG: Local broadband Lambertian foreground albedo (for tilted plane calculations), Card
@@ -541,7 +541,7 @@ def SMARTSSpectra(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE, material
 
 
 
-def SMARTSSpectraZenAzm(IOUT, ZENITH, AZIM, material='LiteSoil', min_wvl='280', max_wvl='4000'):
+def SMARTSSpectraZenAzm(IOUT, ZENITH, AZIM, material='LiteSoil', SPR='1013.25', min_wvl='280', max_wvl='4000'):
     r'''
     This function calculates the spectral albedo for a given material. If no 
     material is provided, the function will return a list of all valid 
@@ -567,6 +567,8 @@ def SMARTSSpectraZenAzm(IOUT, ZENITH, AZIM, material='LiteSoil', min_wvl='280', 
         Zenith angle of sun
     AZIM : string
         Azimuth of sun
+    SPR : string
+        Site Pressure [mbars]. Default: SPR = '1013.25'
     YEAR : string
         Year
     MONTH : string
@@ -576,7 +578,7 @@ def SMARTSSpectraZenAzm(IOUT, ZENITH, AZIM, material='LiteSoil', min_wvl='280', 
     HOUR : string
         Hour, in 24 hour format.
     LATIT : string
-        Latitude of the location, Latit must end with a period. i.e. '32.'
+        Latitude of the location.
     LONGIT : string
         Longitude of the location.
     ALTIT : string
@@ -603,10 +605,10 @@ def SMARTSSpectraZenAzm(IOUT, ZENITH, AZIM, material='LiteSoil', min_wvl='280', 
     # ISPR = 0 to input SPR on Card 2a
     # ISPR = 1 to input SPR, ALTIT and HEIGHT on Card 2a
     # ISPR = 2 to input LATIT, ALTIT and HEIGHT on Card 2a.
-    ISPR = '1'
+    ISPR = '0'
     
     # Card 2a (if ISPR = 0): SPR
-    SPR = '1013.25' #mbar
+    SPR = SPR #mbar
     
     # Card 2a (if ISPR = 1): SPR, ALTIT, HEIGHT
     # SPR: Surface pressure (mb).
@@ -627,9 +629,9 @@ def SMARTSSpectraZenAzm(IOUT, ZENITH, AZIM, material='LiteSoil', min_wvl='280', 
     # The total ALTIT + HEIGHT is the altitude of the simulated object above sea level and
     # must be ? 100 km.
     
-    ALTIT = '0.'
-    HEIGHT = '0'
-    #LATIT = '32.' #dec degs END WITH DOT
+    ALTIT = '' 
+    HEIGHT = ''
+    #LATIT = LATIT
     
     ## Card 3: IATMOS is an option to select the proper default atmosphere
     # Its value can be either 0 or 1.
@@ -849,8 +851,8 @@ def SMARTSSpectraZenAzm(IOUT, ZENITH, AZIM, material='LiteSoil', min_wvl='280', 
     # deg. for a surface facing West. Use -999 for a sun-tracking surface.
     
     IALBDG = IALBDX 
-    TILT = '0.'
-    WAZIM = '180.'
+    TILT = '0.0'
+    WAZIM = '180.0'
     
     # Card 10d:
     # RHOG: Local broadband Lambertian foreground albedo (for tilted plane calculations), Card
@@ -1022,7 +1024,7 @@ def SMARTSTMY3(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE, RHOG,
     HOUR : string
         Hour, in 24 hour format.
     LATIT : string
-        Latitude of the location, Latit must end with a period. i.e. '32.'
+        Latitude of the location.
     LONGIT : string
         Longitude of the location.
     ALTIT : string
@@ -1095,8 +1097,8 @@ def SMARTSTMY3(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE, RHOG,
     
     ALTIT = ALTIT
     HEIGHT = HEIGHT
-    #LATIT = '32.' #dec degs END WITH DOT
-    
+    #LATIT = LATIT 
+
     ## Card 3: IATMOS is an option to select the proper default atmosphere
     # Its value can be either 0 or 1.
     # Set IATMOS = 0 to define a realistic (i.e., non-reference) atmosphere. Card 3a will then have to
@@ -1316,8 +1318,8 @@ def SMARTSTMY3(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE, RHOG,
     # deg. for a surface facing West. Use -999 for a sun-tracking surface.
     
     IALBDG = '-1' #Sil check if this should be -1 or 1.
-    TILT = '0.'
-    WAZIM = '180.'
+    TILT = '0.0'
+    WAZIM = '180.0'
     
     # Card 10d:
     # RHOG: Local broadband Lambertian foreground albedo (for tilted plane calculations), Card
@@ -1489,7 +1491,7 @@ def SMARTSSRRL(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE,
     HOUR : string
         Hour, in 24 hour format.
     LATIT : string
-        Latitude of the location, Latit must end with a period. i.e. '32.'
+        Latitude of the location.
     LONGIT : string
         Longitude of the location.
     ALTIT : string
@@ -1572,7 +1574,7 @@ def SMARTSSRRL(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE,
     
     ALTIT = ALTIT
     HEIGHT = HEIGHT
-    #LATIT = '32.' #dec degs END WITH DOT
+    #LATIT = LATIT
     
     ## Card 3: IATMOS is an option to select the proper default atmosphere
     # Its value can be either 0 or 1.
