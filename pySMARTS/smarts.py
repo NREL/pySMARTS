@@ -1016,6 +1016,950 @@ def SMARTSSpectraZenAzm(IOUT, ZENITH, AZIM, material='LiteSoil', min_wvl='280', 
     return output
 
 
+def SMARTSTMY3(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE, RHOG,
+               W, RH, TAIR, SEASON, TDAY, SPR, HEIGHT=0,
+               material='DryGrass', min_wvl='280', max_wvl='4000'):
+
+    r'''
+    This function calculates the spectral albedo for a given material. If no 
+    material is provided, the function will return a list of all valid 
+    materials.
+
+    Parameters
+    ----------
+    material : string
+        Unique identifier for ground cover. Pass None to retreive a list of
+        all valid materials.
+    WLMN : string
+        Minimum wavelength to retreive
+    WLMX : string
+        Maximum wavelength to retreive
+    INTVL : string
+        The resolution of the returned wavelengths. Note different regions have
+        different maximum resolutions.
+    use_zenith_azimuth : boolean
+        Selection to determine what parameters set solar position and air mass
+        calculations. Pass True to use zenith and azimuth and False to use
+        year, month, day, hour, lat., long., alt., and timezone.
+    ZENITH : string
+        Zenith angle of sun
+    AZIM : string
+        Azimuth of sun
+    YEAR : string
+        Year
+    MONTH : string
+        Month
+    DAY : string
+        Day
+    HOUR : string
+        Hour, in 24 hour format.
+    LATIT : string
+        Latitude of the location, Latit must end with a period. i.e. '32.'
+    LONGIT : string
+        Longitude of the location.
+    ALTIT : string
+        elevation of the ground surface above sea level [km].
+        WARNING: Please note that TMY3 data is in meters, convert before using this
+        function.
+    ZONE : string
+        Timezone
+    RHOG : string
+        Local broadband Lambertian foreground albedo (for tilted plane calculations)
+    W : string
+        Precipitable water above the site altitude, in units of cm or equivalently
+        g/cm2/
+    RH : string
+        Relative Humidity
+    TAIR : string
+        Temperature.
+    SEASON : string
+        Season, either 'WINTER' or 'SUMMER'. If Spring, use 'SUMMER'. If
+        Autumn, use 'WINTER'.
+    TDAY : string
+        Average of the day's temperature.        
+    HEIGHT : string
+        Altitude of the simulated object over the surface, in km.
+    SPR : string
+        Site pressure, in mbars.
+        
+    Returns
+    -------
+    data : pandas
+        Matrix with first column representing wavelength (in nm) and second
+        column representing albedo of specified material at the wavelength
+    
+    '''
+
+    if ALTIT > 800:
+        print("Altitude should be in km. Are you in Mt. Everest or above or",
+              "using meters? This might fail but we'll attempt to continue.")
+    
+    ## Card 1: Comment
+    CMNT = 'TMY Parameters Spectra'
+    
+    ## Card 2: ISPR is an option for sites pressure.
+    # ISPR = 0 to input SPR on Card 2a
+    # ISPR = 1 to input SPR, ALTIT and HEIGHT on Card 2a
+    # ISPR = 2 to input LATIT, ALTIT and HEIGHT on Card 2a.
+    ISPR = '1'
+    
+    # Card 2a (if ISPR = 0): SPR
+    SPR = SPR #mbar
+    
+    # Card 2a (if ISPR = 1): SPR, ALTIT, HEIGHT
+    # SPR: Surface pressure (mb).
+    # ALTIT: Sites altitude, i.e., elevation of the ground surface above sea level (km); must be
+    # ? 100 km. In case of a flying object, ALTIT refers to the ground surface below it.
+    # HEIGHT: Height of the simulated object above the ground surface underneath (km); must be
+    # ? 100 km (new input).
+    # The total ALTIT + HEIGHT is the altitude of the simulated object above sea level and
+    # must be ? 100 km.
+    
+    # Card 2a (if ISPR = 2): LATIT, ALTIT, HEIGHT
+    # LATIT: Sites latitude (decimal degrees, positive North, negative South); e.g., -17.533 for
+    # Papeete, Tahiti. If LATIT is unknown, enter 45.0.
+    # ALTIT: Sites altitude, i.e., elevation of the ground surface above sea level (km); must be
+    # ? 100 km. In case of a flying object, ALTIT refers to the ground surface below it.
+    # HEIGHT: Height of the simulated object above the ground surface underneath (km); must be
+    # ? 100 km (new input).
+    # The total ALTIT + HEIGHT is the altitude of the simulated object above sea level and
+    # must be ? 100 km.
+    
+    ALTIT = ALTIT
+    HEIGHT = HEIGHT
+    #LATIT = '32.' #dec degs END WITH DOT
+    
+    ## Card 3: IATMOS is an option to select the proper default atmosphere
+    # Its value can be either 0 or 1.
+    # Set IATMOS = 0 to define a realistic (i.e., non-reference) atmosphere. Card 3a will then have to
+    # provide TAIR, RH, SEASON, TDAY.
+    # Set IATMOS = 1 to select one of 10 default reference atmospheres (i.e., for ideal conditions). The
+    # shortened name of this atmosphere must be provided by ATMOS on Card 3a.
+    
+    IATMOS = '0'
+    
+    # Card 3a (if IATMOS = 1): ATMOS
+    # ATMOS is the name of the selected reference atmosphere; 4 characters max. This name can
+    # be one of the following: 
+    # USSA (U.S. Standard Atmosphere) MLS (Mid-Latitude Summer) 
+    # MLW (Mid-Latitude Winter) SAS (Sub-Arctic Summer) 
+    # SAW (Sub-Arctic Winter) TRL (Tropical) STS (Sub-Tropical Summer)
+    # STW (Sub-Tropical Winter) AS (Arctic Summer) AW (Arctic Winter)
+    
+    ATMOS = 'USSA'
+    
+    # Card 3a(if IATMOS = 0): TAIR, RH, SEASON, TDAY.
+    # RH: Relative humidity at site level (%).
+    # SEASON: Can be either WINTER or SUMMER, for calculation of precipitable water and
+    # stratospheric temperature. If the true season is Fall, select WINTER. Select SUMMER if the
+    # true season is Spring. SEASON slightly affects the ozone effective temperature and the
+    # aerosol optical characteristics.
+    # TAIR: Atmospheric temperature at site level (°C). Acceptable range: -120 < TAIR < 50.
+    # TDAY: Average daily temperature at site level (°C). For a flying object (HEIGHT > 0), this
+    # is a reference temperature for various calculations, therefore it is important to provide a
+    # realistic value in this case in particular. Acceptable range: -120 < TDAY < 50.
+    
+    RH = RH
+    TAIR = TAIR
+    SEASON = SEASON
+    TDAY = TDAY
+    
+    ## Card 4: IH2O is an option to select the correct water vapor data. All water vapor calculations involve
+    # precipitable water, W. The following values of IH2O are possible:
+    # 0, to input W on Card 4a
+    # 1, if W is to be defaulted to a value prescribed by the selected reference atmosphere and the site
+    # altitude (thus if IATMOS = 1 on Card 3). If IATMOS ? 1, USSA will be defaulted for this step.
+    # 2, if W is to be calculated by the program from TAIR and RH (thus if IATMOS = 0 on Card 3). This
+    # calculation is only approximate (particularly if HEIGHT > 0) and therefore this option is not
+    # recommended.
+    # If IATMOS = 0 is selected, then IH2O should be 0 or 2; IO3 and IGAS should be 0.
+    # If IATMOS = 1 is selected, then IH2O, IO3, and IGAS may take any value. All user inputs
+    # have precedence over the defaults.
+    
+    IH2O = '0'
+    
+    # Card 4a: (if IH2O = 0): W is precipitable water above the site altitude
+    # in units of cm, or equivalently, g/cm2; it must be ? 12.
+    
+    W = tmy_W
+    
+    ## Card 5: IO3 is an option to select the appropriate ozone abundance input.
+    # IO3 = 0 to input IALT and AbO3 on Card 5a
+    # IO3 = 1 to use a default value for AbO3 according to the reference atmosphere selected by
+    # IATMOS. If IATMOS ? 1, USSA will be defaulted for this calculation.
+    # If IATMOS = 0 is selected, then IH2O should be 0 or 2; IO3 and IGAS should be 0.
+    # If IATMOS = 1 is selected, then IH2O, IO3, and IGAS may take any value. All user inputs
+    # have precedence over the defaults.
+    IO3 = '1'
+
+    # Card 5a (if IO3 = 0): IALT, AbO3
+    # IALT is an option to select the appropriate ozone column altitude correction.
+    # IALT = 0 bypasses the altitude correction, so that the value of AbO3 on
+    # Card 5a is used as is. IALT = 1 should be rather used if a vertical
+    # profile correction needs to be applied (in case of an elevated site when
+    # the value of AbO3 is known only at sea level). 
+    
+    IALT = ''
+    AbO3 = ''
+    
+    ## Card 6 IGAS is an option to define the correct conditions for gaseous absorption and atmospheric pollution. 
+    # IGAS = 0 if ILOAD on Card 6a is to be read so that extra gaseous absorption calculations
+    # (corresponding to the gas load in the lower troposphere due to pollutionor absence thereof) can be
+    # initiated;
+    # IGAS =1 if all gas abundances (except carbon dioxide, ozone and water vaporsee Cards 4a, 5a,
+    # and 7) are to be defaulted, using average vertical profiles.
+    # If IATMOS = 0 is selected, then IH2O should be 0 or 2; IO3 and IGAS should be 0.
+    # If IATMOS = 1 is selected, then IH2O, IO3, and IGAS may take any value. All user inputs
+    # have precedence over the defaults.
+    
+    IGAS = '0'
+    
+    # Card 6a  (if IGAS = 0): ILOAD is an option for tropospheric pollution, only used if IGAS = 0.
+    # For ILOAD = 0, Card 6b will be read with the concentrations of 10 pollutants.
+    # ILOAD = 1 selects default PRISTINE ATMOSPHERIC conditions, leading to slightly
+    # reduced abundances of some gases compared to the initial default obtained with the selected
+    # reference atmosphere.
+    # Setting ILOAD to 24 will increase the concentration of the 10 pollutants to possibly
+    # represent typical urban conditions: LIGHT POLLUTION (ILOAD = 2), MODERATE
+    # POLLUTION (ILOAD = 3), and SEVERE POLLUTION (ILOAD = 4).
+    
+    ILOAD = '1'
+    
+    # Card 6b (if IGAS = 0 and ILOAD = 0): ApCH2O, ApCH4, ApCO, ApHNO2,
+    # ApHNO3, ApNO, ApNO2, ApNO3, ApO3, ApSO2
+    # ApCH2O: Formaldehyde volumetric concentration in the assumed 1-km deep tropospheric
+    # pollution layer (ppmv).
+    # ApCH4: Methane volumetric concentration in the assumed 1-km deep tropospheric pollution
+    # layer (ppmv).
+    # ApCO: Carbon monoxide volumetric concentration in the assumed 1-km deep tropospheric
+    # pollution layer (ppmv), Card 6b.
+    # ApHNO2: Nitrous acid volumetric concentration in the assumed 1-km deep tropospheric
+    # pollution layer (ppmv).
+    # ApHNO3: Nitric acid volumetric concentration in the assumed 1-km deep tropospheric
+    # pollution layer (ppmv).
+    # ApNO: Nitric oxide volumetric concentration in the assumed 1-km deep tropospheric
+    # pollution layer (ppmv).
+    # ApNO2: Nitrogen dioxide volumetric concentration in the assumed 1-km deep tropospheric
+    # pollution layer (ppmv).
+    # ApNO3: Nitrogen trioxide volumetric concentration in the assumed 1-km deep tropospheric
+    # pollution layer (ppmv).
+    # ApO3: Ozone volumetric concentration in the assumed 1-km deep tropospheric pollution
+    # layer (ppmv).
+    # ApSO2: Sulfur dioxide volumetric concentration in the assumed 1-km deep tropospheric
+    # pollution layer (ppmv).
+    
+    ApCH2O = ''
+    ApCH4 = ''
+    ApCO = ''
+    ApHNO2 = ''
+    ApHNO3 = ''
+    ApNO = ''
+    ApNO2 = ''
+    ApNO3 = ''
+    ApO3 = ''
+    ApSO2 =''
+    
+    ## Card 7 qCO2 carbon dioxide columnar volumetric concentration (ppmv).
+    qCO2 = '0'
+    
+    # Card 7a ISPCTR 
+    # is an option to select the proper extraterrestrial
+    # spectrum. This option allows to choose one out of ten possible spectral
+    # files (Spctrm_n.dat, where n = 08 or n = U).  
+    # -1 Spctrm_U.dat N/A User User
+    # 0 Spctrm_0.dat N/A Gueymard, 2004 (synthetic) 1366.10
+    # 1 Spctrm_1.dat N/A Gueymard, unpublished (synthetic) 1367.00
+    # 2 Spctrm_2.dat cebchkur MODTRAN, Cebula/Chance/Kurucz 1362.12
+    # 3 Spctrm_3.dat chkur MODTRAN, Chance/Kurucz 1359.75
+    # 4 Spctrm_4.dat newkur MODTRAN, New Kurucz 1368.00
+    # 5 Spctrm_5.dat oldkur MODTRAN, Old Kurucz 1373.16
+    # 6 Spctrm_6.dat thkur MODTRAN, Thuillier/Kurucz 1376.23
+    # 7 Spctrm_7.dat MODTRAN2 Wehrli/WRC/WMO, 1985 1367.00
+    # 8 Spctrm_8.dat N/A ASTM E490, 2000 (synthetic) 1366.10
+    
+    ISPCTR ='0'
+    
+    ## Card 8: AEROS selects the aerosol model, with one of the following twelve possible choices:
+    # S&F_RURAL, S&F_URBAN, S&F_MARIT, S&F_TROPO, These four choices
+    # refer respectively to the Rural, Urban, Maritime and Tropospheric aerosol
+    # models (Shettle and Fenn, 1979), which are humidity dependent and common with MODTRAN. 
+    # SRA_CONTL, SRA_URBAN, SRA_MARIT, These three choices refer
+    # respectively to the Continental, Urban, and Maritime aerosol models of
+    # the IAMAP preliminary standard atmosphere (IAMAP, 1986). 
+    # B&D_C, B&D_C1, These two choices refer respectively to the Braslau &
+    # Dave aerosol type C and C1, themselves based on Deirmendjians Haze L model. 
+    # DESERT_MIN, DESERT_MAX DESERT_MIN corresponds to background (normal)
+    # conditions in desert areas, whereas DESERT_MAX corresponds to extremely
+    # turbid conditions (sandstorms).  
+    # 'USER' Card 8a is then necessary to input user-supplied aerosol information.
+    
+    AEROS = 'S&F_TROPO' 
+    # Card 8a: 
+    # if AEROS = USER: ALPHA1, ALPHA2, OMEGL, GG These 4 variables must represent broadband average values only!
+    # ALPHA1: Average value of Ångströms wavelength exponent ? for wavelengths < 500 nm
+    # (generally between 0.0 and 2.6).
+    # ALPHA2: Average value of Ångströms wavelength exponent ? for wavelengths ? 500 nm
+    # (generally between 0.0 and 2.6).
+    # OMEGL: Aerosol single scattering albedo (generally between 0.6 and 1.0).
+    # GG: Aerosol asymmetry parameter (generally between 0.5 and 0.9).
+    ALPHA1 = ''
+    ALPHA2 = ''
+    OMEGL = ''
+    GG = ''
+    
+    ## Card 9: ITURB is an option to select the correct turbidity data input. The different options are:
+    # 0, to read TAU5 on Card 9a
+    # 1, to read BETA on Card 9a
+    # 2, to read BCHUEP on Card 9a
+    # 3, to read RANGE on Card 9a
+    # 4, to read VISI on Card 9a
+    # 5, to read TAU550 on Card 9a (new option).
+    
+    ITURB = '0'
+    
+    #Card 9a Turbidity value
+    TAU5 = '0.00' #if ITURB == 0
+    BETA = '' #if ITURB == 1
+    BCHUEP = '' #if ITURB == 2
+    RANGE = '' #if ITURB == 3
+    VISI = '' #if ITURB == 4
+    TAU550 = '' #if ITURB == 5
+    
+    ## Card 10: Far Field Albedo for backscattering
+    IALBDX = _material_to_code(material)
+    
+    # Card 10a:
+    RHOX = ''
+                            # Zonal broadband Lambertian ground albedo (for backscattering calculations); must
+                            # be between 0 and 1.
+                            
+    # Card 10b: ITILT is an option for tilted surface calculations. 
+    #Select ITILT= 0 for no such calculation, 
+    #ITILT = 1 to initiate these calculations using information on Card 10c.
+    ITILT = '1'
+    
+    # Card 10c:
+    # IALBDG is identical to IALBDX (see Card 10) except that it relates to the foreground local
+    # albedo seen by a tilted surface. The list of options is identical to that of IALBDG and thus
+    # extends from 1 to 64 (new).
+    # TILT: Tilt angle of the receiving surface (0 to 90 decimal deg.); e.g. 90.0 for a vertical
+    # plane. Use -999 for a sun-tracking surface.
+    # WAZIM: Surface azimuth (0 to 360 decimal deg.) counted clockwise from North; e.g., 270
+    # deg. for a surface facing West. Use -999 for a sun-tracking surface.
+    
+    IALBDG = '-1' #Sil check if this should be -1 or 1.
+    TILT = '0.'
+    WAZIM = '180.'
+    
+    # Card 10d:
+    # RHOG: Local broadband Lambertian foreground albedo (for tilted plane calculations), Card
+    # 10d (if IALBDG = -1); usually between 0.05 and 0.90.
+    RHOG = RHOG
+    
+    ## Card 11: Spectral range for all Calculations
+    WLMN = min_wvl #Min wavelength
+    WLMX = max_wvl #Max wavelength
+    SUNCOR = '1.0' 
+        #Correction factor for irradiance is a correction factor equal to the inverse squared actual radius vector, or true Sun-Earth
+        # distance; e.g., SUNCOR = 1.024.
+        # SUNCOR varies naturally between 0.966 and 1.034, adding 3.4% to the irradiance in January
+        # and reducing it by 3.4% in July. It is calculated by the program if the solar position is calculated
+        # from date & time, i.e., if IMASS = 3 on Card 17, thus overwriting the input SUNCOR value on
+        # Card 11. If solar position is directly input instead (IMASS = 3), SUNCOR should be set to 1.0 if
+        # the average extraterrestrial irradiance (or solar constant, see SOLARC) is to be used, or to any
+        # other number between 0.966 and 1.034 to correct it for distance if so desired.
+
+    SOLARC = '1367.0' #Solar constant
+    
+    
+    ## Card 12: Output results selection:
+    # IPRT is an option to select the results to be printed on Files 16 and 17. Only broadband results are
+    # output (to File 16) if IPRT = 0. Spectral results are added to File 16,
+    # and Card 12a is read, if IPRT = 1. Spectral results are rather printed to
+    # File 17 (in a spreadsheet-like format) if IPRT = 2. Finally, spectral
+    # results are printed to both File 16 and 17 if IPRT = 3. Cards 
+    # 12b and 12c are read if IPRT = 2 or 3 (see IOTOT and IOUT).
+    IPRT = '2'
+    
+    # Card 12a: Min, Max and Step wavelength (nm) (Output can be different than
+    # calculation...
+    WPMN = WLMN
+    WPMX = WLMX
+    INTVL = '.5'
+    
+    # Card 12b: Total number of output variables:
+    #IOTOT = XXX #This is determined with the input of this function
+    
+    # Card 12c: Variables to output selection 
+    #(space separated numbers 1-43 according to the table below:
+    #IOUT = '30 31'
+    
+    
+    ## Card 13: Circumsolar Calculation
+    # ICIRC is an option controlling the calculation of circumsolar radiation, which is useful when
+    # simulating any type of radiometer (spectral or broadband) equipped with a collimator.
+    # ICIRC = 0 bypasses these calculations.
+    # ICIRC = 1 indicates that a typical radiometer needs to be simulated. The geometry of its collimator
+    # must then defined on Card 13a.
+    
+    ICIRC = '0'
+    
+    #Card 13a (if ICIRC = 1): SLOPE, APERT, LIMIT
+    SLOPE = ''
+    APERT = ''
+    LIMIT = ''
+    
+    ## Card 14 Option for using the scanning/smoothing virtual filter of the postprocessor.
+    # The smoothed results are output on a spreadsheet-ready file, File 18 (smarts295.scn.txt). This postprocessor is
+    # activated if ISCAN = 1, not if ISCAN = 0. Card 14a is read if ISCAN = 1.
+    
+    ISCAN = '0'
+    
+    # Card 14a (if ISCAN = 1): IFILT, WV1, WV2, STEP, FWHM
+    IFILT = ''
+    WV1 = ''
+    WV2 = ''
+    STEP = ''
+    FWHM = ''
+    
+    ## Card 15 ILLUM: Option for illuminance, luminous efficacy and photosynthetically active radiation (PAR)
+    # calculations. These calculations take place if ILLUM = -1, 1, -2 or 2, and are bypassed if ILLUM = 0.
+    # With ILLUM = -1 or 1, illuminance calculations are based on the CIE photopic curve (or Vlambda
+    # curve) of 1924, as supplied in File VLambda.dat. With ILLUM = -2 or 2, the same calculations are
+    # done but the revised CIE photopic curve of 1988 is rather used (from File VMLambda.dat). Note
+    # that selecting ILLUM = 1 or 1 will override WLMN and WLMX (see Card 11) so that calculations
+    # are done between at least 360 and 830 nm.
+    # Moreover, if ILLUM = 1 or 2, luminous efficacy calculations are added to the illuminance
+    # calculations. This overrides the values of WLMN and WLMX on Card 11, and replaces them by 280
+    # and 4000, respectively.
+    
+    ILLUM = '0'
+    
+    ## Card  16: Option for special broadband UV calculations. Select IUV = 0 for no special UV calculation, 
+    # IUV = 1 to initiate such calculations. These include UVA, UVB, UV index, and
+    # different action weighted irradiances of interest in photobiology.
+    # Note that IUV = 1 overrides WLMN and WLMX so that calculations are done between at least 280
+    # and 400 nm. The spectral results are also printed between at least 280 and 400 nm, irrespective of
+    # the IPRT, WPMN, and WPMX values.
+    
+    IUV = '0'
+    
+    ## Card 17:
+    # Option for solar position and air mass calculations. Set IMASS to:
+    # 0, if inputs are to be ZENIT, AZIM on Card 17a
+    # 1, if inputs are to be ELEV, AZIM on Card 17a
+    # 2, if input is to be AMASS on Card 17a
+    # 3, if inputs are to be YEAR, MONTH, DAY, HOUR, LATIT, LONGIT, ZONE on Card 17a
+    # 4, if inputs are to be MONTH, LATIT, DSTEP on Card 17a (for a daily calculation).
+    IMASS = '3'
+
+    
+    # Card 17a: IMASS = 0 Zenith and azimuth
+    ZENITH = ''
+    AZIM = ''
+    
+    # Card 17a: IMASS = 1 Elevation and Azimuth
+    ELEV = ''
+    
+    # Card 17a: IMASS = 2 Input air mass directly
+    AMASS = ''
+    
+    # Card 17a: IMASS = 3 Input date, time and coordinates
+    YEAR = YEAR
+    MONTH = MONTH
+    DAY = DAY
+    HOUR = HOUR
+    LATIT = LATIT
+    LONGIT = LONGIT
+    ZONE = ZONE
+    
+    # Card 17a: IMASS = 4 Input Moth, Latitude and DSTEP
+    DSTEP = ''
+
+    output = _smartsAll(CMNT, ISPR, SPR, ALTIT, HEIGHT, LATIT, IATMOS, ATMOS, RH, TAIR, SEASON, TDAY, IH2O, W, IO3, IALT, AbO3, IGAS, ILOAD, ApCH2O, ApCH4, ApCO, ApHNO2, ApHNO3, ApNO,ApNO2, ApNO3, ApO3, ApSO2, qCO2, ISPCTR, AEROS, ALPHA1, ALPHA2, OMEGL, GG, ITURB, TAU5, BETA, BCHUEP, RANGE, VISI, TAU550, IALBDX, RHOX, ITILT, IALBDG,TILT, WAZIM,  RHOG, WLMN, WLMX, SUNCOR, SOLARC, IPRT, WPMN, WPMX, INTVL, IOUT, ICIRC, SLOPE, APERT, LIMIT, ISCAN, IFILT, WV1, WV2, STEP, FWHM, ILLUM,IUV, IMASS, ZENITH, AZIM, ELEV, AMASS, YEAR, MONTH, DAY, HOUR, LONGIT, ZONE, DSTEP)
+
+    return output
+
+
+
+def SMARTSSRRL(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE, 
+               W, RH, TAIR, SEASON, TDAY, SPR, TAU5, TILT, WAZIM,
+               RHOG, HEIGHT=0, 
+               material='DryGrass', min_wvl='280', max_wvl='4000'):
+
+    r'''
+    This function calculates the spectral albedo for a given material. If no 
+    material is provided, the function will return a list of all valid 
+    materials.
+
+    Parameters
+    ----------
+    material : string
+        Unique identifier for ground cover. Pass None to retreive a list of
+        all valid materials.
+    WLMN : string
+        Minimum wavelength to retreive
+    WLMX : string
+        Maximum wavelength to retreive
+    INTVL : string
+        The resolution of the returned wavelengths. Note different regions have
+        different maximum resolutions.
+    use_zenith_azimuth : boolean
+        Selection to determine what parameters set solar position and air mass
+        calculations. Pass True to use zenith and azimuth and False to use
+        year, month, day, hour, lat., long., alt., and timezone.
+    ZENITH : string
+        Zenith angle of sun
+    AZIM : string
+        Azimuth of sun
+    YEAR : string
+        Year
+    MONTH : string
+        Month
+    DAY : string
+        Day
+    HOUR : string
+        Hour, in 24 hour format.
+    LATIT : string
+        Latitude of the location, Latit must end with a period. i.e. '32.'
+    LONGIT : string
+        Longitude of the location.
+    ALTIT : string
+        elevation of the ground surface above sea level [km].
+        WARNING: Please note that TMY3 data is in meters, convert before using this
+        function.
+    ZONE : string
+        Timezone
+    W : string
+        Precipitable water above the site altitude, in units of cm or equivalently
+        g/cm2/
+    RH : string
+        Relative Humidity
+    TAIR : string
+        Temperature.
+    SEASON : string
+        Season, either 'WINTER' or 'SUMMER'. If Spring, use 'SUMMER'. If
+        Autumn, use 'WINTER'.
+    TDAY : string
+        Average of the day's temperature.        
+    HEIGHT : string
+        Altitude of the simulated object over the surface, in km.
+    SPR : string
+        Site pressure, in mbars.
+    TAU5 : string
+        Broadband turbidity
+    TILT : string
+        Tilt angel of the receiving surface (0 to 90 decimal deg.), e.g. 90.0
+        for a vertical plane. Use -999 for a sun-tracking surface.
+    WAZIM : string
+        Surface azimuth (0 to 360 decimal deg.) counted clockwise from North;
+        e.g., 270 deg. for a surface facing West. Use -999 for a sun-tracking
+        surface.
+    RHOG : string
+        Local broadband Lambertian foreground albedo (for tilted plane calculations),
+        usually between 0.05 and 0.90.
+
+    Returns
+    -------
+    data : pandas
+        Matrix with first column representing wavelength (in nm) and second
+        column representing albedo of specified material at the wavelength
+    
+    '''
+
+    if ALTIT > 800:
+        print("Altitude should be in km. Are you in Mt. Everest or above or",
+              "using meters? This might fail but we'll attempt to continue.")
+    
+    ## Card 1: Comment
+    CMNT = 'TMY Parameters Spectra'
+    
+    ## Card 2: ISPR is an option for sites pressure.
+    # ISPR = 0 to input SPR on Card 2a
+    # ISPR = 1 to input SPR, ALTIT and HEIGHT on Card 2a
+    # ISPR = 2 to input LATIT, ALTIT and HEIGHT on Card 2a.
+    ISPR = '1'
+    
+    # Card 2a (if ISPR = 0): SPR
+    SPR = SPR #mbar
+    
+    # Card 2a (if ISPR = 1): SPR, ALTIT, HEIGHT
+    # SPR: Surface pressure (mb).
+    # ALTIT: Sites altitude, i.e., elevation of the ground surface above sea level (km); must be
+    # ? 100 km. In case of a flying object, ALTIT refers to the ground surface below it.
+    # HEIGHT: Height of the simulated object above the ground surface underneath (km); must be
+    # ? 100 km (new input).
+    # The total ALTIT + HEIGHT is the altitude of the simulated object above sea level and
+    # must be ? 100 km.
+    
+    # Card 2a (if ISPR = 2): LATIT, ALTIT, HEIGHT
+    # LATIT: Sites latitude (decimal degrees, positive North, negative South); e.g., -17.533 for
+    # Papeete, Tahiti. If LATIT is unknown, enter 45.0.
+    # ALTIT: Sites altitude, i.e., elevation of the ground surface above sea level (km); must be
+    # ? 100 km. In case of a flying object, ALTIT refers to the ground surface below it.
+    # HEIGHT: Height of the simulated object above the ground surface underneath (km); must be
+    # ? 100 km (new input).
+    # The total ALTIT + HEIGHT is the altitude of the simulated object above sea level and
+    # must be ? 100 km.
+    
+    ALTIT = ALTIT
+    HEIGHT = HEIGHT
+    #LATIT = '32.' #dec degs END WITH DOT
+    
+    ## Card 3: IATMOS is an option to select the proper default atmosphere
+    # Its value can be either 0 or 1.
+    # Set IATMOS = 0 to define a realistic (i.e., non-reference) atmosphere. Card 3a will then have to
+    # provide TAIR, RH, SEASON, TDAY.
+    # Set IATMOS = 1 to select one of 10 default reference atmospheres (i.e., for ideal conditions). The
+    # shortened name of this atmosphere must be provided by ATMOS on Card 3a.
+    
+    IATMOS = '0'
+    
+    # Card 3a (if IATMOS = 1): ATMOS
+    # ATMOS is the name of the selected reference atmosphere; 4 characters max. This name can
+    # be one of the following: 
+    # USSA (U.S. Standard Atmosphere) MLS (Mid-Latitude Summer) 
+    # MLW (Mid-Latitude Winter) SAS (Sub-Arctic Summer) 
+    # SAW (Sub-Arctic Winter) TRL (Tropical) STS (Sub-Tropical Summer)
+    # STW (Sub-Tropical Winter) AS (Arctic Summer) AW (Arctic Winter)
+    
+    ATMOS = 'USSA'
+    
+    # Card 3a(if IATMOS = 0): TAIR, RH, SEASON, TDAY.
+    # RH: Relative humidity at site level (%).
+    # SEASON: Can be either WINTER or SUMMER, for calculation of precipitable water and
+    # stratospheric temperature. If the true season is Fall, select WINTER. Select SUMMER if the
+    # true season is Spring. SEASON slightly affects the ozone effective temperature and the
+    # aerosol optical characteristics.
+    # TAIR: Atmospheric temperature at site level (°C). Acceptable range: -120 < TAIR < 50.
+    # TDAY: Average daily temperature at site level (°C). For a flying object (HEIGHT > 0), this
+    # is a reference temperature for various calculations, therefore it is important to provide a
+    # realistic value in this case in particular. Acceptable range: -120 < TDAY < 50.
+    
+    RH = RH
+    TAIR = TAIR
+    SEASON = SEASON
+    TDAY = TDAY
+    
+    ## Card 4: IH2O is an option to select the correct water vapor data. All water vapor calculations involve
+    # precipitable water, W. The following values of IH2O are possible:
+    # 0, to input W on Card 4a
+    # 1, if W is to be defaulted to a value prescribed by the selected reference atmosphere and the site
+    # altitude (thus if IATMOS = 1 on Card 3). If IATMOS ? 1, USSA will be defaulted for this step.
+    # 2, if W is to be calculated by the program from TAIR and RH (thus if IATMOS = 0 on Card 3). This
+    # calculation is only approximate (particularly if HEIGHT > 0) and therefore this option is not
+    # recommended.
+    # If IATMOS = 0 is selected, then IH2O should be 0 or 2; IO3 and IGAS should be 0.
+    # If IATMOS = 1 is selected, then IH2O, IO3, and IGAS may take any value. All user inputs
+    # have precedence over the defaults.
+    
+    IH2O = '0'
+    
+    # Card 4a: (if IH2O = 0): W is precipitable water above the site altitude
+    # in units of cm, or equivalently, g/cm2; it must be ? 12.
+    
+    W = tmy_W
+    
+    ## Card 5: IO3 is an option to select the appropriate ozone abundance input.
+    # IO3 = 0 to input IALT and AbO3 on Card 5a
+    # IO3 = 1 to use a default value for AbO3 according to the reference atmosphere selected by
+    # IATMOS. If IATMOS ? 1, USSA will be defaulted for this calculation.
+    # If IATMOS = 0 is selected, then IH2O should be 0 or 2; IO3 and IGAS should be 0.
+    # If IATMOS = 1 is selected, then IH2O, IO3, and IGAS may take any value. All user inputs
+    # have precedence over the defaults.
+    IO3 = '1'
+
+    # Card 5a (if IO3 = 0): IALT, AbO3
+    # IALT is an option to select the appropriate ozone column altitude correction.
+    # IALT = 0 bypasses the altitude correction, so that the value of AbO3 on
+    # Card 5a is used as is. IALT = 1 should be rather used if a vertical
+    # profile correction needs to be applied (in case of an elevated site when
+    # the value of AbO3 is known only at sea level). 
+    IALT = ''
+    AbO3 = ''
+    
+    ## Card 6 IGAS is an option to define the correct conditions for gaseous absorption and atmospheric pollution. 
+    # IGAS = 0 if ILOAD on Card 6a is to be read so that extra gaseous absorption calculations
+    # (corresponding to the gas load in the lower troposphere due to pollutionor absence thereof) can be
+    # initiated;
+    # IGAS =1 if all gas abundances (except carbon dioxide, ozone and water vaporsee Cards 4a, 5a,
+    # and 7) are to be defaulted, using average vertical profiles.
+    # If IATMOS = 0 is selected, then IH2O should be 0 or 2; IO3 and IGAS should be 0.
+    # If IATMOS = 1 is selected, then IH2O, IO3, and IGAS may take any value. All user inputs
+    # have precedence over the defaults.
+    
+    IGAS = '0'
+    
+    # Card 6a  (if IGAS = 0): ILOAD is an option for tropospheric pollution, only used if IGAS = 0.
+    # For ILOAD = 0, Card 6b will be read with the concentrations of 10 pollutants.
+    # ILOAD = 1 selects default PRISTINE ATMOSPHERIC conditions, leading to slightly
+    # reduced abundances of some gases compared to the initial default obtained with the selected
+    # reference atmosphere.
+    # Setting ILOAD to 24 will increase the concentration of the 10 pollutants to possibly
+    # represent typical urban conditions: LIGHT POLLUTION (ILOAD = 2), MODERATE
+    # POLLUTION (ILOAD = 3), and SEVERE POLLUTION (ILOAD = 4).
+    
+    ILOAD = '1'
+    
+    # Card 6b (if IGAS = 0 and ILOAD = 0): ApCH2O, ApCH4, ApCO, ApHNO2,
+    # ApHNO3, ApNO, ApNO2, ApNO3, ApO3, ApSO2
+    # ApCH2O: Formaldehyde volumetric concentration in the assumed 1-km deep tropospheric
+    # pollution layer (ppmv).
+    # ApCH4: Methane volumetric concentration in the assumed 1-km deep tropospheric pollution
+    # layer (ppmv).
+    # ApCO: Carbon monoxide volumetric concentration in the assumed 1-km deep tropospheric
+    # pollution layer (ppmv), Card 6b.
+    # ApHNO2: Nitrous acid volumetric concentration in the assumed 1-km deep tropospheric
+    # pollution layer (ppmv).
+    # ApHNO3: Nitric acid volumetric concentration in the assumed 1-km deep tropospheric
+    # pollution layer (ppmv).
+    # ApNO: Nitric oxide volumetric concentration in the assumed 1-km deep tropospheric
+    # pollution layer (ppmv).
+    # ApNO2: Nitrogen dioxide volumetric concentration in the assumed 1-km deep tropospheric
+    # pollution layer (ppmv).
+    # ApNO3: Nitrogen trioxide volumetric concentration in the assumed 1-km deep tropospheric
+    # pollution layer (ppmv).
+    # ApO3: Ozone volumetric concentration in the assumed 1-km deep tropospheric pollution
+    # layer (ppmv).
+    # ApSO2: Sulfur dioxide volumetric concentration in the assumed 1-km deep tropospheric
+    # pollution layer (ppmv).
+    
+    ApCH2O = ''
+    ApCH4 = ''
+    ApCO = ''
+    ApHNO2 = ''
+    ApHNO3 = ''
+    ApNO = ''
+    ApNO2 = ''
+    ApNO3 = ''
+    ApO3 = ''
+    ApSO2 =''
+    
+    ## Card 7 qCO2 carbon dioxide columnar volumetric concentration (ppmv).
+    qCO2 = '0'
+    qCO2 = ''   #SIL: Trying to see if there is a default.
+    
+    # Card 7a ISPCTR 
+    # is an option to select the proper extraterrestrial
+    # spectrum. This option allows to choose one out of ten possible spectral
+    # files (Spctrm_n.dat, where n = 08 or n = U).  
+    # -1 Spctrm_U.dat N/A User User
+    # 0 Spctrm_0.dat N/A Gueymard, 2004 (synthetic) 1366.10
+    # 1 Spctrm_1.dat N/A Gueymard, unpublished (synthetic) 1367.00
+    # 2 Spctrm_2.dat cebchkur MODTRAN, Cebula/Chance/Kurucz 1362.12
+    # 3 Spctrm_3.dat chkur MODTRAN, Chance/Kurucz 1359.75
+    # 4 Spctrm_4.dat newkur MODTRAN, New Kurucz 1368.00
+    # 5 Spctrm_5.dat oldkur MODTRAN, Old Kurucz 1373.16
+    # 6 Spctrm_6.dat thkur MODTRAN, Thuillier/Kurucz 1376.23
+    # 7 Spctrm_7.dat MODTRAN2 Wehrli/WRC/WMO, 1985 1367.00
+    # 8 Spctrm_8.dat N/A ASTM E490, 2000 (synthetic) 1366.10
+    
+    ISPCTR ='0'
+    
+    ## Card 8: AEROS selects the aerosol model, with one of the following twelve possible choices:
+    # S&F_RURAL, S&F_URBAN, S&F_MARIT, S&F_TROPO, These four choices
+    # refer respectively to the Rural, Urban, Maritime and Tropospheric aerosol
+    # models (Shettle and Fenn, 1979), which are humidity dependent and common with MODTRAN. 
+    # SRA_CONTL, SRA_URBAN, SRA_MARIT, These three choices refer
+    # respectively to the Continental, Urban, and Maritime aerosol models of
+    # the IAMAP preliminary standard atmosphere (IAMAP, 1986). 
+    # B&D_C, B&D_C1, These two choices refer respectively to the Braslau &
+    # Dave aerosol type C and C1, themselves based on Deirmendjians Haze L model. 
+    # DESERT_MIN, DESERT_MAX DESERT_MIN corresponds to background (normal)
+    # conditions in desert areas, whereas DESERT_MAX corresponds to extremely
+    # turbid conditions (sandstorms).  
+    # 'USER' Card 8a is then necessary to input user-supplied aerosol information.
+    
+    AEROS = 'S&F_TROPO' 
+    # Card 8a: 
+    # if AEROS = USER: ALPHA1, ALPHA2, OMEGL, GG These 4 variables must represent broadband average values only!
+    # ALPHA1: Average value of Ångströms wavelength exponent ? for wavelengths < 500 nm
+    # (generally between 0.0 and 2.6).
+    # ALPHA2: Average value of Ångströms wavelength exponent ? for wavelengths ? 500 nm
+    # (generally between 0.0 and 2.6).
+    # OMEGL: Aerosol single scattering albedo (generally between 0.6 and 1.0).
+    # GG: Aerosol asymmetry parameter (generally between 0.5 and 0.9).
+    ALPHA1 = ''
+    ALPHA2 = ''
+    OMEGL = ''
+    GG = ''
+    
+    ## Card 9: ITURB is an option to select the correct turbidity data input. The different options are:
+    # 0, to read TAU5 on Card 9a
+    # 1, to read BETA on Card 9a
+    # 2, to read BCHUEP on Card 9a
+    # 3, to read RANGE on Card 9a
+    # 4, to read VISI on Card 9a
+    # 5, to read TAU550 on Card 9a (new option).
+    
+    ITURB = '0'
+    
+    #Card 9a Turbidity value
+    TAU5 = TAU5 #'0.00' #if ITURB == 0
+    BETA = '' #if ITURB == 1
+    BCHUEP = '' #if ITURB == 2
+    RANGE = '' #if ITURB == 3
+    VISI = '' #if ITURB == 4
+    TAU550 = '' #if ITURB == 5
+    
+    ## Card 10: Far Field Albedo for backscattering
+    IALBDX = _material_to_code(material)
+    
+    # Card 10a:
+    RHOX = ''
+                            # Zonal broadband Lambertian ground albedo (for backscattering calculations); must
+                            # be between 0 and 1.
+                            
+    # Card 10b: ITILT is an option for tilted surface calculations. 
+    #Select ITILT= 0 for no such calculation, 
+    #ITILT = 1 to initiate these calculations using information on Card 10c.
+    ITILT = '1'
+    
+    # Card 10c:
+    # IALBDG is identical to IALBDX (see Card 10) except that it relates to the foreground local
+    # albedo seen by a tilted surface. The list of options is identical to that of IALBDG and thus
+    # extends from 1 to 64 (new).
+    # TILT: Tilt angle of the receiving surface (0 to 90 decimal deg.); e.g. 90.0 for a vertical
+    # plane. Use -999 for a sun-tracking surface.
+    # WAZIM: Surface azimuth (0 to 360 decimal deg.) counted clockwise from North; e.g., 270
+    # deg. for a surface facing West. Use -999 for a sun-tracking surface.
+    
+    IALBDG = '-1' 
+    TILT = TILT
+    WAZIM = WAZIM
+    
+    # Card 10d:
+    # RHOG: Local broadband Lambertian foreground albedo (for tilted plane calculations), Card
+    # 10d (if IALBDG = -1); usually between 0.05 and 0.90.
+    RHOG = RHOG
+    
+    ## Card 11: Spectral range for all Calculations
+    WLMN = min_wvl #Min wavelength
+    WLMX = max_wvl #Max wavelength
+    SUNCOR = '1.0' 
+        #Correction factor for irradiance is a correction factor equal to the inverse squared actual radius vector, or true Sun-Earth
+        # distance; e.g., SUNCOR = 1.024.
+        # SUNCOR varies naturally between 0.966 and 1.034, adding 3.4% to the irradiance in January
+        # and reducing it by 3.4% in July. It is calculated by the program if the solar position is calculated
+        # from date & time, i.e., if IMASS = 3 on Card 17, thus overwriting the input SUNCOR value on
+        # Card 11. If solar position is directly input instead (IMASS = 3), SUNCOR should be set to 1.0 if
+        # the average extraterrestrial irradiance (or solar constant, see SOLARC) is to be used, or to any
+        # other number between 0.966 and 1.034 to correct it for distance if so desired.
+
+    SOLARC = '1367.0' #Solar constant
+    
+    
+    ## Card 12: Output results selection:
+    # IPRT is an option to select the results to be printed on Files 16 and 17. Only broadband results are
+    # output (to File 16) if IPRT = 0. Spectral results are added to File 16,
+    # and Card 12a is read, if IPRT = 1. Spectral results are rather printed to
+    # File 17 (in a spreadsheet-like format) if IPRT = 2. Finally, spectral
+    # results are printed to both File 16 and 17 if IPRT = 3. Cards 
+    # 12b and 12c are read if IPRT = 2 or 3 (see IOTOT and IOUT).
+    IPRT = '2'
+    
+    # Card 12a: Min, Max and Step wavelength (nm) (Output can be different than
+    # calculation...
+    WPMN = WLMN
+    WPMX = WLMX
+    INTVL = '.5'
+    
+    # Card 12b: Total number of output variables:
+    #IOTOT = XXX #This is determined with the input of this function
+    
+    # Card 12c: Variables to output selection 
+    #(space separated numbers 1-43 according to the table below:
+    #IOUT = '30 31'
+    
+    
+    ## Card 13: Circumsolar Calculation
+    # ICIRC is an option controlling the calculation of circumsolar radiation, which is useful when
+    # simulating any type of radiometer (spectral or broadband) equipped with a collimator.
+    # ICIRC = 0 bypasses these calculations.
+    # ICIRC = 1 indicates that a typical radiometer needs to be simulated. The geometry of its collimator
+    # must then defined on Card 13a.
+    
+    ICIRC = '0'
+    
+    #Card 13a (if ICIRC = 1): SLOPE, APERT, LIMIT
+    SLOPE = ''
+    APERT = ''
+    LIMIT = ''
+    
+    ## Card 14 Option for using the scanning/smoothing virtual filter of the postprocessor.
+    # The smoothed results are output on a spreadsheet-ready file, File 18 (smarts295.scn.txt). This postprocessor is
+    # activated if ISCAN = 1, not if ISCAN = 0. Card 14a is read if ISCAN = 1.
+    
+    ISCAN = '0'
+    
+    # Card 14a (if ISCAN = 1): IFILT, WV1, WV2, STEP, FWHM
+    IFILT = ''
+    WV1 = ''
+    WV2 = ''
+    STEP = ''
+    FWHM = ''
+    
+    ## Card 15 ILLUM: Option for illuminance, luminous efficacy and photosynthetically active radiation (PAR)
+    # calculations. These calculations take place if ILLUM = -1, 1, -2 or 2, and are bypassed if ILLUM = 0.
+    # With ILLUM = -1 or 1, illuminance calculations are based on the CIE photopic curve (or Vlambda
+    # curve) of 1924, as supplied in File VLambda.dat. With ILLUM = -2 or 2, the same calculations are
+    # done but the revised CIE photopic curve of 1988 is rather used (from File VMLambda.dat). Note
+    # that selecting ILLUM = 1 or 1 will override WLMN and WLMX (see Card 11) so that calculations
+    # are done between at least 360 and 830 nm.
+    # Moreover, if ILLUM = 1 or 2, luminous efficacy calculations are added to the illuminance
+    # calculations. This overrides the values of WLMN and WLMX on Card 11, and replaces them by 280
+    # and 4000, respectively.
+    
+    ILLUM = '0'
+    
+    ## Card  16: Option for special broadband UV calculations. Select IUV = 0 for no special UV calculation, 
+    # IUV = 1 to initiate such calculations. These include UVA, UVB, UV index, and
+    # different action weighted irradiances of interest in photobiology.
+    # Note that IUV = 1 overrides WLMN and WLMX so that calculations are done between at least 280
+    # and 400 nm. The spectral results are also printed between at least 280 and 400 nm, irrespective of
+    # the IPRT, WPMN, and WPMX values.
+    
+    IUV = '0'
+    
+    ## Card 17:
+    # Option for solar position and air mass calculations. Set IMASS to:
+    # 0, if inputs are to be ZENIT, AZIM on Card 17a
+    # 1, if inputs are to be ELEV, AZIM on Card 17a
+    # 2, if input is to be AMASS on Card 17a
+    # 3, if inputs are to be YEAR, MONTH, DAY, HOUR, LATIT, LONGIT, ZONE on Card 17a
+    # 4, if inputs are to be MONTH, LATIT, DSTEP on Card 17a (for a daily calculation).
+    IMASS = '3'
+
+    
+    # Card 17a: IMASS = 0 Zenith and azimuth
+    ZENITH = ''
+    AZIM = ''
+    
+    # Card 17a: IMASS = 1 Elevation and Azimuth
+    ELEV = ''
+    
+    # Card 17a: IMASS = 2 Input air mass directly
+    AMASS = ''
+    
+    # Card 17a: IMASS = 3 Input date, time and coordinates
+    YEAR = YEAR
+    MONTH = MONTH
+    DAY = DAY
+    HOUR = HOUR
+    LATIT = LATIT
+    LONGIT = LONGIT
+    ZONE = ZONE
+    
+    # Card 17a: IMASS = 4 Input Moth, Latitude and DSTEP
+    DSTEP = ''
+
+    output = _smartsAll(CMNT, ISPR, SPR, ALTIT, HEIGHT, LATIT, IATMOS, ATMOS, RH, TAIR, SEASON, TDAY, IH2O, W, IO3, IALT, AbO3, IGAS, ILOAD, ApCH2O, ApCH4, ApCO, ApHNO2, ApHNO3, ApNO,ApNO2, ApNO3, ApO3, ApSO2, qCO2, ISPCTR, AEROS, ALPHA1, ALPHA2, OMEGL, GG, ITURB, TAU5, BETA, BCHUEP, RANGE, VISI, TAU550, IALBDX, RHOX, ITILT, IALBDG,TILT, WAZIM,  RHOG, WLMN, WLMX, SUNCOR, SOLARC, IPRT, WPMN, WPMX, INTVL, IOUT, ICIRC, SLOPE, APERT, LIMIT, ISCAN, IFILT, WV1, WV2, STEP, FWHM, ILLUM,IUV, IMASS, ZENITH, AZIM, ELEV, AMASS, YEAR, MONTH, DAY, HOUR, LONGIT, ZONE, DSTEP)
+
+    return output
+
+
+
+
 def _smartsAll(CMNT, ISPR, SPR, ALTIT, HEIGHT, LATIT, IATMOS, ATMOS, RH, TAIR, SEASON, TDAY, IH2O, W, IO3, IALT, AbO3, IGAS, ILOAD, ApCH2O, ApCH4, ApCO, ApHNO2, ApHNO3, ApNO,ApNO2, ApNO3, ApO3, ApSO2, qCO2, ISPCTR, AEROS, ALPHA1, ALPHA2, OMEGL, GG, ITURB, TAU5, BETA, BCHUEP, RANGE, VISI, TAU550, IALBDX, RHOX, ITILT, IALBDG,TILT, WAZIM,  RHOG, WLMN, WLMX, SUNCOR, SOLARC, IPRT, WPMN, WPMX, INTVL, IOUT, ICIRC, SLOPE, APERT, LIMIT, ISCAN, IFILT, WV1, WV2, STEP, FWHM, ILLUM,IUV, IMASS, ZENITH, AZIM, ELEV, AMASS, YEAR, MONTH, DAY, HOUR, LONGIT, ZONE, DSTEP):
     r'''
     #data = smartsAll(CMNT, ISPR, SPR, ALTIT, HEIGHT, LATIT, IATMOS, ATMOS, RH, TAIR, SEASON, TDAY, IH2O, W, IO3, IALT, AbO3, IGAS, ILOAD, ApCH2O, ApCH4, ApCO, ApHNO2, ApHNO3, ApNO,ApNO2, ApNO3, ApO3, ApSO2, qCO2, ISPCTR, AEROS, ALPHA1, ALPHA2, OMEGL, GG, ITURB, TAU5, BETA, BCHUEP, RANGE, VISI, TAU550, IALBDX, RHOX, ITILT, IALBDG,TILT, WAZIM,  RHOG, WLMN, WLMX, SUNCOR, SOLARC, IPRT, WPMN, WPMX, INTVL, IOUT, ICIRC, SLOPE, APERT, LIMIT, ISCAN, IFILT, WV1, WV2, STEP, FWHM, ILLUM,IUV, IMASS, ZENITH, ELEV, AMASS, YEAR, MONTH, DAY, HOUR, LONGIT, ZONE, DSTEP)  
