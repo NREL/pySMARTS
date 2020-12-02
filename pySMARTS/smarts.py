@@ -113,17 +113,6 @@ def SMARTSSpectra(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE, material
         Minimum wavelength to retreive
     WLMX : string
         Maximum wavelength to retreive
-    INTVL : string
-        The resolution of the returned wavelengths. Note different regions have
-        different maximum resolutions.
-    use_zenith_azimuth : boolean
-        Selection to determine what parameters set solar position and air mass
-        calculations. Pass True to use zenith and azimuth and False to use
-        year, month, day, hour, lat., long., alt., and timezone.
-    ZENITH : string
-        Zenith angle of sun
-    AZIM : string
-        Azimuth of sun
     YEAR : string
         Year
     MONTH : string
@@ -556,35 +545,12 @@ def SMARTSSpectraZenAzm(IOUT, ZENITH, AZIM, material='LiteSoil', SPR='1013.25', 
         Minimum wavelength to retreive
     WLMX : string
         Maximum wavelength to retreive
-    INTVL : string
-        The resolution of the returned wavelengths. Note different regions have
-        different maximum resolutions.
-    use_zenith_azimuth : boolean
-        Selection to determine what parameters set solar position and air mass
-        calculations. Pass True to use zenith and azimuth and False to use
-        year, month, day, hour, lat., long., alt., and timezone.
     ZENITH : string
         Zenith angle of sun
     AZIM : string
         Azimuth of sun
     SPR : string
         Site Pressure [mbars]. Default: SPR = '1013.25'
-    YEAR : string
-        Year
-    MONTH : string
-        Month
-    DAY : string
-        Day
-    HOUR : string
-        Hour, in 24 hour format.
-    LATIT : string
-        Latitude of the location.
-    LONGIT : string
-        Longitude of the location.
-    ALTIT : string
-        elevation of the ground surface above sea level [km]
-    ZONE : string
-        Timezone
         
         
 
@@ -1004,17 +970,6 @@ def SMARTSTMY3(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE, RHOG,
         Minimum wavelength to retreive
     WLMX : string
         Maximum wavelength to retreive
-    INTVL : string
-        The resolution of the returned wavelengths. Note different regions have
-        different maximum resolutions.
-    use_zenith_azimuth : boolean
-        Selection to determine what parameters set solar position and air mass
-        calculations. Pass True to use zenith and azimuth and False to use
-        year, month, day, hour, lat., long., alt., and timezone.
-    ZENITH : string
-        Zenith angle of sun
-    AZIM : string
-        Azimuth of sun
     YEAR : string
         Year
     MONTH : string
@@ -1471,17 +1426,6 @@ def SMARTSSRRL(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE,
         Minimum wavelength to retreive
     WLMX : string
         Maximum wavelength to retreive
-    INTVL : string
-        The resolution of the returned wavelengths. Note different regions have
-        different maximum resolutions.
-    use_zenith_azimuth : boolean
-        Selection to determine what parameters set solar position and air mass
-        calculations. Pass True to use zenith and azimuth and False to use
-        year, month, day, hour, lat., long., alt., and timezone.
-    ZENITH : string
-        Zenith angle of sun
-    AZIM : string
-        Azimuth of sun
     YEAR : string
         Year
     MONTH : string
