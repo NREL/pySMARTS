@@ -1108,6 +1108,11 @@ def SMARTSTMY3(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE, RHOG,
     
     W = W
     
+    if float(W) == 0 or float(W) > 12:
+        print("Switching to calculating W")
+        IH2O = '2'
+        
+    
     ## Card 5: IO3 is an option to select the appropriate ozone abundance input.
     # IO3 = 0 to input IALT and AbO3 on Card 5a
     # IO3 = 1 to use a default value for AbO3 according to the reference atmosphere selected by
@@ -1408,8 +1413,8 @@ def SMARTSTMY3(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE, RHOG,
 
 
 def SMARTSSRRL(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE, 
-               W, RH, TAIR, SEASON, TDAY, SPR, TAU5, TILT, WAZIM,
-               RHOG, HEIGHT='0', 
+               W, RH, TAIR, SEASON, TDAY, SPR, TILT, WAZIM,
+               RHOG, ALPHA1, ALPHA2, OMEGL, GG, BETA, HEIGHT='0', 
                material='DryGrass', min_wvl='280', max_wvl='4000'):
 
     r'''
@@ -1683,7 +1688,7 @@ def SMARTSSRRL(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE,
     # turbid conditions (sandstorms).  
     # 'USER' Card 8a is then necessary to input user-supplied aerosol information.
     
-    AEROS = 'S&F_TROPO' 
+    AEROS = 'USER' #'S&F_TROPO' 
     # Card 8a: 
     # if AEROS =  USER : ALPHA1, ALPHA2, OMEGL, GG These 4 variables must represent broadband average values only!
     # ALPHA1: Average value of Ångström's wavelength exponent $\alpha$ for wavelengths < 500 nm
@@ -1692,10 +1697,10 @@ def SMARTSSRRL(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE,
     # (generally between 0.0 and 2.6).
     # OMEGL: Aerosol single scattering albedo (generally between 0.6 and 1.0).
     # GG: Aerosol asymmetry parameter (generally between 0.5 and 0.9).
-    ALPHA1 = ''
-    ALPHA2 = ''
-    OMEGL = ''
-    GG = ''
+    ALPHA1 = ALPHA1
+    ALPHA2 = ALPHA2
+    OMEGL = OMEGL
+    GG = GG
     
     ## Card 9: ITURB is an option to select the correct turbidity data input. The different options are:
     # 0, to read TAU5 on Card 9a
@@ -1705,11 +1710,11 @@ def SMARTSSRRL(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE,
     # 4, to read VISI on Card 9a
     # 5, to read TAU550 on Card 9a (new option).
     
-    ITURB = '0'
+    ITURB = '1'
     
     #Card 9a Turbidity value
-    TAU5 = TAU5 #'0.00' #if ITURB == 0
-    BETA = '' #if ITURB == 1
+    TAU5 = '' #'0.00' #if ITURB == 0
+    BETA = BETA #'' #if ITURB == 1
     BCHUEP = '' #if ITURB == 2
     RANGE = '' #if ITURB == 3
     VISI = '' #if ITURB == 4
