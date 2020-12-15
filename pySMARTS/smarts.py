@@ -1414,7 +1414,7 @@ def SMARTSTMY3(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE, RHOG,
 
 def SMARTSSRRL(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE, 
                W, RH, TAIR, SEASON, TDAY, SPR, TILT, WAZIM,
-               RHOG, ALPHA1, ALPHA2, OMEGL, GG, BETA, HEIGHT='0', 
+               RHOG, ALPHA1, ALPHA2, OMEGL, GG, BETA, TAU5, HEIGHT='0', 
                material='DryGrass', min_wvl='280', max_wvl='4000'):
 
     r'''
@@ -1424,13 +1424,7 @@ def SMARTSSRRL(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE,
 
     Parameters
     ----------
-    material : string
-        Unique identifier for ground cover. Pass None to retreive a list of
-        all valid materials.
-    WLMN : string
-        Minimum wavelength to retreive
-    WLMX : string
-        Maximum wavelength to retreive
+
     YEAR : string
         Year
     MONTH : string
@@ -1465,8 +1459,14 @@ def SMARTSSRRL(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE,
         Altitude of the simulated object over the surface, in km.
     SPR : string
         Site pressure, in mbars.
+    BETA : string
+        Ångström’s turbidity coefficient, ß (i.e., aerosol optical depth at 1000 nm)
+        If BETA and TAU5 are used as inputs, BETA is selected as priority since
+        TAU5 would be used to calcualte an internal SMARTS BETA value.
     TAU5 : string
-        Broadband turbidity
+        Aerosol optical depth at 500 nm, τ5.
+        If BETA and TAU5 are used as inputs, BETA is selected as priority since
+        TAU5 would be used to calcualte an internal SMARTS BETA value.
     TILT : string
         Tilt angel of the receiving surface (0 to 90 decimal deg.), e.g. 90.0
         for a vertical plane. Use -999 for a sun-tracking surface.
@@ -1477,6 +1477,14 @@ def SMARTSSRRL(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE,
     RHOG : string
         Local broadband Lambertian foreground albedo (for tilted plane calculations),
         usually between 0.05 and 0.90.
+        For SRRL Data, this is 
+    material : string
+        Unique identifier for ground cover. Pass None to retreive a list of
+        all valid materials.
+    WLMN : string
+        Minimum wavelength to retreive
+    WLMX : string
+        Maximum wavelength to retreive
 
     Returns
     -------
@@ -1713,8 +1721,12 @@ def SMARTSSRRL(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE,
     ITURB = '1'
     
     #Card 9a Turbidity value
-    TAU5 = '' #'0.00' #if ITURB == 0
-    BETA = BETA #'' #if ITURB == 1
+    if BETA is not None:
+        BETA = BETA
+        TAU5 = ''
+    else:
+        TAU5 = TAU5
+        BETA = '' 
     BCHUEP = '' #if ITURB == 2
     RANGE = '' #if ITURB == 3
     VISI = '' #if ITURB == 4
@@ -2370,19 +2382,19 @@ def _smartsAll(CMNT, ISPR, SPR, ALTIT, HEIGHT, LATIT, IATMOS, ATMOS, RH, TAIR, S
     try:
         os.remove('smarts295.inp.txt')
     except:
-        print("") 
+        pass
     try:
         os.remove('smarts295.out.txt')
     except:
-        print("")     
+        pass  
     try:       
         os.remove('smarts295.ext.txt')
     except:
-        print("") 
+        pass
     try:
         os.remove('smarts295.scn.txt')
     except:
-        print("") 
+        pass
         
     f = open('smarts295.inp.txt', 'w')
     
@@ -2434,7 +2446,7 @@ def _smartsAll(CMNT, ISPR, SPR, ALTIT, HEIGHT, LATIT, IATMOS, ATMOS, RH, TAIR, S
     elif IH2O=='1':
         #case '1'
         #The subcard 4a is skipped
-        print("")
+        pass  #      print("")
     
     ## Card 5: Ozone abundance
     print('{}'.format(IO3), file=f)
@@ -2447,7 +2459,7 @@ def _smartsAll(CMNT, ISPR, SPR, ALTIT, HEIGHT, LATIT, IATMOS, ATMOS, RH, TAIR, S
         #case '1'
         #The subcard 5a is skipped and default values are used from selected 
         #reference atmosphere in Card 3. 
-        print("")
+        pass #      print("")
     
     ## Card 6: Gaseous absorption and atmospheric pollution
     print('{}'.format(IGAS), file=f)
@@ -2465,13 +2477,13 @@ def _smartsAll(CMNT, ISPR, SPR, ALTIT, HEIGHT, LATIT, IATMOS, ATMOS, RH, TAIR, S
             #case '1'
                 #The subcard 6b is skipped and values of PRISTINE
                 #ATMOSPHERIC conditions are assumed
-            print("")
+            pass #     print("")
         elif ILOAD=='2' or ILOAD =='3' or ILOAD == '4':
             #case {'2', '3', '4'}
             #The subcard 6b is skipped and value of ILOAD will be used
             #as LIGHT POLLUTION (ILOAD = 2), MODERATE POLLUTION (ILOAD = 3), 
             #and SEVERE POLLUTION (ILOAD = 4).
-            print("")
+            pass #     print("")
              
     elif IGAS=='1':
         #case '1'
@@ -2495,7 +2507,7 @@ def _smartsAll(CMNT, ISPR, SPR, ALTIT, HEIGHT, LATIT, IATMOS, ATMOS, RH, TAIR, S
         print('{} {} {} {}'.format(ALPHA1, ALPHA2, OMEGL, GG), file=f)
     else:
         #The subcard 8a is skipped
-        print("")
+        pass #     print("")
     
     ## Card 9: Option to select turbidity model
     print('{}'.format(ITURB), file=f)
@@ -2529,7 +2541,7 @@ def _smartsAll(CMNT, ISPR, SPR, ALTIT, HEIGHT, LATIT, IATMOS, ATMOS, RH, TAIR, S
     if IALBDX == '-1':
         print('{}'.format(RHOX), file=f)
     else:
-        print("")
+        pass #     print("")
         #The subcard 10a is skipped.
     
     ## Card 10b: Tilted surface calculation flag
@@ -2544,7 +2556,7 @@ def _smartsAll(CMNT, ISPR, SPR, ALTIT, HEIGHT, LATIT, IATMOS, ATMOS, RH, TAIR, S
         if IALBDG == '-1': 
             print('{}'.format(RHOG), file=f)
         else:
-            print("")
+            pass #     print("")
             #The subcard is skipped 
     
     
@@ -2563,10 +2575,10 @@ def _smartsAll(CMNT, ISPR, SPR, ALTIT, HEIGHT, LATIT, IATMOS, ATMOS, RH, TAIR, S
             print('{}'.format(IOTOT), file=f)
             print('{}'.format(IOUT), file=f)
         else:
-            print("")
+            pass #     print("")
             #The subcards 12b and 12c are skipped.
     else:
-        print("")
+        pass #     print("")
         #The subcard 12a is skipped
     
     ## Card 13: Circumsolar calculations
@@ -2576,7 +2588,7 @@ def _smartsAll(CMNT, ISPR, SPR, ALTIT, HEIGHT, LATIT, IATMOS, ATMOS, RH, TAIR, S
     if ICIRC == '1':
         print('{} {} {}'.format(SLOPE, APERT, LIMIT), file=f)
     else:
-        print("")
+        pass #     print("")
         #The subcard 13a is skipped since no circumsolar calculations or
         #simulated radiometers have been requested.
 
@@ -2588,7 +2600,7 @@ def _smartsAll(CMNT, ISPR, SPR, ALTIT, HEIGHT, LATIT, IATMOS, ATMOS, RH, TAIR, S
     if ISCAN == '1': 
         print('{} {} {} {} {}'.format(IFILT, WV1, WV2, STEP, FWHM), file=f)
     else:
-        print("")
+        pass #     print("")
         #The subcard 14a is skipped since no postprocessing is simulated.    
     
     ## Card 15: Illuminace, luminous efficacy and photosythetically active radiarion calculations
@@ -2643,19 +2655,19 @@ def _smartsAll(CMNT, ISPR, SPR, ALTIT, HEIGHT, LATIT, IATMOS, ATMOS, RH, TAIR, S
     try:
         os.remove('smarts295.inp.txt')
     except:
-        print("") 
+        pass #     print("") 
     try:
         os.remove('smarts295.out.txt')
     except:
-        print("")     
+        pass #     print("")     
     try:       
         os.remove('smarts295.ext.txt')
     except:
-        print("") 
+        pass #     print("") 
     try:
         os.remove('smarts295.scn.txt')
     except:
-        print("") 
+        pass #     print("") 
     
     # Return to original working directory.    
     if original_wd:
