@@ -1415,7 +1415,7 @@ def SMARTSTMY3(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE, RHOG,
 def SMARTSSRRL(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE, 
                W, RH, TAIR, SEASON, TDAY, SPR, TILT, WAZIM,
                RHOG, ALPHA1, ALPHA2, OMEGL, GG, BETA, TAU5, HEIGHT='0', 
-               material='DryGrass', min_wvl='280', max_wvl='4000'):
+               material='DryGrass', min_wvl='280', max_wvl='4000', POA='TRUE'):
 
     r'''
     This function calculates the spectra with inputs available on the Solar
@@ -1762,8 +1762,11 @@ def SMARTSSRRL(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE,
     # Card 10b: ITILT is an option for tilted surface calculations. 
     #Select ITILT= 0 for no such calculation, 
     #ITILT = 1 to initiate these calculations using information on Card 10c.
-    ITILT = '1'
-    
+    if POA:
+        ITILT = '1'
+    else:
+        ITILT = '0'
+
     # Card 10c:
     # IALBDG is identical to IALBDX (see Card 10) except that it relates to the foreground local
     # albedo seen by a tilted surface. The list of options is identical to that of IALBDG and thus
