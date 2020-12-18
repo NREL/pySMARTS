@@ -19,6 +19,78 @@ Please read the license and Readme files for more information, proper use, citin
     
 """
 
+def IOUT_to_code(IOUT):
+    r''' Function to display the options of outputs that SMARTS has. 
+     If run without input (IOUT = None), it prints in a list all possible outputs.
+     If IOUT is passed to equal one of the outputs (i.e. 
+     (i.e. IOUT = 'Global horizontal irradiance W m-2'), it returns the
+     code number for that output (returns '4' for this example).
+     
+     PARAMETERS
+     -----------
+     IOUT: String
+           Can be None or a SMARTS output description
+          
+     RETURNS
+     -------
+     IOUT_Key: String
+          Key code to SMARTS cards input.
+
+     '''
+
+    IOUT_map = { 'Extraterrestrial spectrum W m-2':     '1', 
+            'Direct normal irradiance W m-2':     '2',
+            'Diffuse horizontal irradiance W m-2':     '3',
+            'Global horizontal irradiance W m-2':     '4',
+            'Direct horizontal irradiance W m-2':     '5',
+            'Direct tilted irradiance W m-2':     '6',
+            'Diffuse tilted irradiance W m-2':     '7',
+            'Global tilted irradiance W m-2':     '8',
+            'Experimental direct normal irradiance (with circumsolar) W m-2':     '9',
+            'Experimental diffuse horizontal irradiance W m-2':     '10',
+            'Circumsolar irradiance within radiometer field of view W m-2':     '11',
+            'Global tilted photon flux per wavelength cm-2 s-1 nm-1':     '12*',
+            'Direct normal photon flux per wavelength cm-2 s-1 nm-1':     '13',
+            'Diffuse horizontal photon flux per wavelength cm-2 s-1 nm-1':     '14',
+            'Rayleigh transmittance':     '15',
+            'Ozone transmittance':     '16',
+            'Transmittance from all trace gases':     '17',
+            'Water vapor transmittance':     '18',
+            'Mixed gas transmittance':     '19',
+            'Aerosol transmittance':     '20',
+            'Beam radiation transmittance':     '21',
+            'Rayleigh optical thickness':     '22',
+            'Ozone optical thickness':     '23',
+            'Optical thickness from all trace gases':     '24',
+            'Water vapor optical thickness':     '25',
+            'Mixed gas optical thickness':     '26',
+            'Aerosol optical thickness':     '27',
+            'Aerosol single scattering albedo':     '28',
+            'Aerosol asymmetry factor':     '29',
+            'Zonal surface reflectance':     '30',
+            'Local ground reflectance':     '31',
+            'Atmospheric reflectance':     '32',
+            'Global foreground reflected irradiance on tilted surface W m-2':     '33*',
+            'Upward hemispheric ground-reflected irradiance W m-2':     '34*',
+            'Global horizontal photosynthetic photon flux ?mol m-2 s-1 nm-1':     '35*',
+            'Direct normal photosynthetic photon flux ?mol m-2 s-1 nm-1':     '36*',
+            'Diffuse horizontal photosynthetic photon flux ?mol m-2 s-1 nm-1':     '37*',
+            'Global tilted photosynthetic photon flux ?mol m-2 s-1 nm-1':     '38*',
+            'Spectral photonic energy eV':     '39*',
+            'Global horizontal photon flux per eV cm-2 s-1 eV-1':     '40*',
+            'Direct normal photon flux per eV cm-2 s-1 eV-1':     '41*',
+            'Diffuse horizontal photon flux per eV cm-2 s-1 eV-1':     '42*',
+            'Global tilted photon flux per eV cm-2 s-1 eV-1':     '43*'
+            }
+    
+    if not IOUT:
+        return list(IOUT_map.keys())
+    if IOUT not in IOUT_map:
+        print(f"Unknown output specified: '{IOUT}'")
+        return None
+    return IOUT_map.get(IOUT)
+
+    
 def _material_to_code(material):
     # Comments include Description, File name(.DAT extension), Reflection, Type*, Spectral range(um), Category*
     # *KEYS: L Lambertian, NL Non-Lambertian, SP Specular, M Manmade materials, S Soils and rocks, U User defined, V Vegetation, W Water, snow, or ice
@@ -129,8 +201,7 @@ def SMARTSSpectra(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE, material
         elevation of the ground surface above sea level [km]
     ZONE : string
         Timezone
-        
-        
+
 
     Returns
     -------
