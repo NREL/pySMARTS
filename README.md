@@ -30,5 +30,5 @@ For developer installation, download the repository, navigate to the folder loca
 
     pip install -e .
     
- Please note that you will be responsible of downloading SMARTS 2.9.5 from NREL website, and setting SMARTSPATH environment variable to the location of the executable.
+ Please note that you will be responsible of downloading SMARTS 2.9.5 from NREL website, and setting `SMARTSPATH` environment variable to the location of the executable.
  
