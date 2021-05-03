@@ -15,4 +15,20 @@ originally coded in Matlab by Juan Russo (2001), updated and ported to python
 by Silvana Ayala (2019-2020). Original Matlab wrapper was made for graduate studies 
 at the University of Arizona, python porting by NREL.
 
-Copyright (c) 2020 National Renewable Energy Laboratory, University of Arizona Board of Regents 
+Copyright (c) 2021 National Renewable Energy Laboratory, University of Arizona Board of Regents 
+
+Installation
+============
+
+pySMARTS releases may be installed using the ``pip`` and ``conda`` tools. pySMARTSis compatible with Python 3.5 and above.
+
+Install with:
+
+    pip install pySMARTS
+
+For developer installation, download the repository, navigate to the folder location and install as:
+
+    pip install -e .
+    
+ Please note that you will be responsible of downloading SMARTS 2.9.5 from NREL website, and setting SMARTSPATH environment variable to the location of the executable.
+ 
