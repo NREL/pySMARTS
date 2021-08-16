@@ -1,7 +1,7 @@
 <img src="docs/images/py-SMARTS.PNG" width="400">
 
 The ``smarts`` module contains functions for calling SMARTS: Simple Model of the
-Atmoshperic Radiative Transfer of Sunshine, from NREL, developed by 
+Atmospheric Radiative Transfer of Sunshine, from NREL, developed by 
 Dr. Christian Gueymard. 
 
 SMARTS software can be obtained from: 
