@@ -57,16 +57,24 @@ IOUT = '30' # Albedo
 
 # #### Plot Ground Albedo AM 1.0
 
-# In[6]:
+# In[ ]:
 
 
-materials = ['WetSoil', 'DryGrass', 'Grass', 'Snow']
+pySMARTS.SMARTSTimeLocation()
+
+
+# In[57]:
+
+
+materials = ['Concrete', 'LiteLoam', 'RConcrte', 'Gravel']
+materials = ['Gravel']
+
 
 alb_db = pd.DataFrame()
 
 for i in range (0, len(materials)):
 
-    alb = pySMARTS.SMARTSAirMass(IOUT=IOUT, AMASS='1.0', material=materials[i])
+    alb = pySMARTS.SMARTSAirMass(IOUT=IOUT, AMASS='1.5', material=materials[i])
 
     alb_db[materials[i]] = alb[alb.keys()[1]]
     
@@ -76,13 +84,134 @@ alb_db_10 = alb_db
 
 for col in alb_db:
     alb_db[col].plot(legend=True)
+    
 plt.xlabel('Wavelength [nm]')
 plt.xlim([300, 2500])
+plt.axhline(y=0.084, color='r')
+plt.axhline(y=0.10, color='r')
+
+#UV albedo: 295 to 385
+#Total albedo: 300 to 3000
+#10.4 and 8.4 $ Measured
+#References
+
 plt.ylim([0,1])
 plt.ylabel('Reflectance')
 plt.legend(bbox_to_anchor=(1.04,0.75), loc="upper left")
 plt.title('Ground albedos AM 1')
 plt.show()
+
+vis=alb_db.iloc[40:1801].mean()
+uv=alb_db.iloc[30:210].mean()
+
+print(vis)
+print(uv)
+
+
+# In[76]:
+
+
+plt.plot(alb_db)
+plt.plot(alb2)
+
+
+# In[68]:
+
+
+r = pd.RangeIndex(2800,40000, 5)
+r = r/10
+alb2 = alb_db.reindex(r, method='ffill')
+
+
+# In[78]:
+
+
+len(alb2)
+
+
+# In[80]:
+
+
+alb2.iloc[0]
+
+
+# In[74]:
+
+
+# Visible
+alb_db.iloc[40] # 300
+alb_db.iloc[1801] # 3000
+
+# UV
+alb_db.iloc[30] # 295
+alb_db.iloc[210] # 385        
+
+
+# In[101]:
+
+
+# Visible
+alb2.iloc[40] # 300
+alb2.iloc[5440] # 3000
+
+# UV
+alb2.iloc[30] # 295
+alb2.iloc[210] # 385   
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+alb_db.iloc[0:1090].mean()
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[55]:
+
+
+# Visible
+alb_db.iloc[40] # 300
+alb_db.iloc[1801] # 3000
+
+# UV
+alb_db.iloc[30] # 295
+alb_db.iloc[210] # 385        
+
+
+# In[ ]:
+
+
+vis=alb_db.iloc[40:1801].mean()
+uv=alb_db.iloc[30:210].mean()
+
+
+# In[34]:
+
+
+alb_db.iloc[0:1090].mean()
 
 
 # # Plot Ground Albedo for SRRL Data, Oct 21 2020 at 12:45 PM
