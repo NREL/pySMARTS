@@ -4,10 +4,9 @@
 # # 1 - Beginner - Plot Spectra and Albedos from SMARTS
 # 
 # ##### Generate & Plot Spectra and Albedos from SMARTS
-# ###### &ensp;&ensp;&ensp;&ensp; * Plot DNI and DHI for a particular time and location
-# ###### &ensp;&ensp;&ensp;&ensp; * Plot Ground Albedo for various materials at AM 1.5
-# ###### &ensp;&ensp;&ensp;&ensp; * Plot Ground Albedo for complete Weather Data
-# > Generate spectras for albedo and plot them, for different airmass / weather data:
+# ###### &ensp;&ensp;&ensp;&ensp; * 1. DNI and DHI for a particular time and location
+# ###### &ensp;&ensp;&ensp;&ensp; * 2. Ground Albedo for various materials at AM 1.5
+# ###### &ensp;&ensp;&ensp;&ensp; * 3. Ground Albedo for complete AOD and PWD Weather Data
 # 
 
 # In[1]:
