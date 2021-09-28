@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # 1 - Beginner - Plot ALBEDOs from SMARTS
+# # 1 - Beginner - Plot Spectra and Albedos from SMARTS
 # 
-# ##### Generate & Plot Albedos from SMARTS
-# ###### &ensp;&ensp;&ensp;&ensp; * Plot Ground Albedo AM 1.0
-# ###### &ensp;&ensp;&ensp;&ensp; * Plot Ground Albedo for SRRL Data, Oct 21 2020 at 12:45 PM
+# ##### Generate & Plot Spectra and Albedos from SMARTS
+# ###### &ensp;&ensp;&ensp;&ensp; * Plot DNI and DHI for a particular time and location
+# ###### &ensp;&ensp;&ensp;&ensp; * Plot Ground Albedo for various materials at AM 1.5
+# ###### &ensp;&ensp;&ensp;&ensp; * Plot Ground Albedo for complete Weather Data
 # > Generate spectras for albedo and plot them, for different airmass / weather data:
 # 
 
@@ -28,7 +29,7 @@ import os
 plt.rcParams['timezone'] = 'Etc/GMT+7'
 font = {'family' : 'DejaVu Sans',
 'weight' : 'normal',
-'size'   : 22}
+'size'   : 18}
 plt.rc('font', **font)
 plt.rcParams['figure.figsize'] = (12, 5)
 
@@ -47,9 +48,37 @@ pySMARTS.__version__
 
 # #### Real Input data from SRRL for OCTOBER 21st, 12:45 PM
 
-# # Plot Albedos from SMARTS
+# # 1. Plot a DNI and DHI for a particular time and location
+# 
 
-# In[5]:
+# In[22]:
+
+
+IOUT = '2 3' # DNI and DHI
+
+
+# In[21]:
+
+
+YEAR = '2021'
+MONTH = '06'
+DAY = '21'
+HOUR = '12'
+LATIT = '33'
+LONGIT = '110'
+ALTIT = '0.9' # km above sea level
+ZONE = '-7' # Timezone
+
+
+# In[ ]:
+
+
+pySMARTS.SMARTSTimeLocation(IOUT,YEAR,MONTH,DAY,HOUR, LATIT, LONGIT, ALTIT, ZONE)
+
+
+# # 2. Plot Albedos from SMARTS
+
+# In[16]:
 
 
 IOUT = '30' # Albedo
@@ -60,15 +89,7 @@ IOUT = '30' # Albedo
 # In[ ]:
 
 
-pySMARTS.SMARTSTimeLocation()
-
-
-# In[57]:
-
-
 materials = ['Concrete', 'LiteLoam', 'RConcrte', 'Gravel']
-materials = ['Gravel']
-
 
 alb_db = pd.DataFrame()
 
@@ -108,12 +129,20 @@ print(vis)
 print(uv)
 
 
-# In[76]:
+# ## Extra: Averaging Albedos for Visible and UV
+# 
+
+# In[ ]:
 
 
-plt.plot(alb_db)
-plt.plot(alb2)
+vis=alb_db.iloc[40:1801].mean()
+uv=alb_db.iloc[30:210].mean()
+print("Albedo on Visible Range:\n", vis)
+print("Albedo on UV Range:\n", uv)
 
+
+# <div class="alert alert-block alert-info"><b>Tip: </b> If you want full spectrum averages, we recommend interpolating as the default granularity of SMARTS at higher wavelengths is not the same than at lower wavelengths, thus the 'step' is not the same. </div>
+# 
 
 # In[68]:
 
@@ -121,23 +150,14 @@ plt.plot(alb2)
 r = pd.RangeIndex(2800,40000, 5)
 r = r/10
 alb2 = alb_db.reindex(r, method='ffill')
-
-
-# In[78]:
-
-
-len(alb2)
-
-
-# In[80]:
-
-
-alb2.iloc[0]
+print("Albedo for all wavelengths:", alb2.mean())
 
 
 # In[74]:
 
 
+# FYI: Wavelengths corresponding to the albedo before and after interpolating
+"""
 # Visible
 alb_db.iloc[40] # 300
 alb_db.iloc[1801] # 3000
@@ -145,10 +165,6 @@ alb_db.iloc[1801] # 3000
 # UV
 alb_db.iloc[30] # 295
 alb_db.iloc[210] # 385        
-
-
-# In[101]:
-
 
 # Visible
 alb2.iloc[40] # 300
@@ -157,64 +173,13 @@ alb2.iloc[5440] # 3000
 # UV
 alb2.iloc[30] # 295
 alb2.iloc[210] # 385   
+"""
 
 
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-alb_db.iloc[0:1090].mean()
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[55]:
-
-
-# Visible
-alb_db.iloc[40] # 300
-alb_db.iloc[1801] # 3000
-
-# UV
-alb_db.iloc[30] # 295
-alb_db.iloc[210] # 385        
-
-
-# In[ ]:
-
-
-vis=alb_db.iloc[40:1801].mean()
-uv=alb_db.iloc[30:210].mean()
-
-
-# In[34]:
-
-
-alb_db.iloc[0:1090].mean()
-
-
-# # Plot Ground Albedo for SRRL Data, Oct 21 2020 at 12:45 PM
+# # 3. ADVANCED: Plot Ground Albedo for More Complete Weather Data
+# 
+# #### This asumes you know a lot more parameters about your weather data souch as: Broadband Turbidity, Aeorsol Opticla Density parameters, and Precipitable Water. 
+# 
 
 # ###  Real Input data from SRRL for OCTOBER 21st, 12:45 PM
 
@@ -268,6 +233,10 @@ alb = pySMARTS.SMARTSSRRL(
 alb_db[material] = alb[alb.keys()[1]]   
 alb_db.index = alb.Wvlgth
 
+
+# In[ ]:
+
+
 alb_db[material].plot(legend=True, color='y')
 plt.xlabel('Wavelength [nm]')
 plt.xlim([300, 2500])
@@ -278,14 +247,20 @@ plt.title('Albedo @ 12.45 Oct 21, 2020 for SRRL Weather Data ')
 plt.show()
 
 
+# ### A plotly plot to explore the results
+
+# In[24]:
+
+
+import plotly.express as px
+
+
 # In[ ]:
 
 
+fig = px.line(alb_db[material], title='Albedo @ 12.45 Oct 21, 2020 for SRRL Weather Data')
 
-
-
-# In[ ]:
-
-
-
+fig.update_layout(xaxis_title='Wavelength [nm]',
+                  yaxis_title='Reflectance')
+fig.show()
 
