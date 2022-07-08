@@ -2711,22 +2711,22 @@ def _smartsAll(CMNT, ISPR, SPR, ALTIT, HEIGHT, LATIT, IATMOS, ATMOS, RH, TAIR, S
         ## Read SMARTS 2.9.5 Output File
         data = pd.read_csv('smarts295.ext.txt', delim_whitespace=True)    
 
-    try:
-        os.remove('smarts295.inp.txt')
-    except:
-        pass #     print("") 
-    try:
-        os.remove('smarts295.out.txt')
-    except:
-        pass #     print("")     
-    try:       
-        os.remove('smarts295.ext.txt')
-    except:
-        pass #     print("") 
-    try:
-        os.remove('smarts295.scn.txt')
-    except:
-        pass #     print("") 
+    # try:
+    #     os.remove('smarts295.inp.txt')
+    # except:
+    #     pass #     print("") 
+    # try:
+    #     os.remove('smarts295.out.txt')
+    # except:
+    #     pass #     print("")     
+    # try:       
+    #     os.remove('smarts295.ext.txt')
+    # except:
+    #     pass #     print("") 
+    # try:
+    #     os.remove('smarts295.scn.txt')
+    # except:
+    #     pass #     print("") 
     
     # Return to original working directory.    
     if original_wd:
