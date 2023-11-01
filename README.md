@@ -32,3 +32,10 @@ For developer installation, download the repository, navigate to the folder loca
     
  Please note that you will be responsible of downloading SMARTS 2.9.5 from NREL website, and setting `SMARTSPATH` environment variable to the location of the executable.
   We suggest you install SMARTS on a folder that you have full access and permissions to modify files like your Document folder (i.e. Program Files might give you trouble).
+
+
+# Updates
+============
+
+Finally meeting the legendary author of SMARTS Christian Gueymard at IEA PVPS Task Group 13 meeting on Lisbon, on September 2023. Apparently new things are coming for SMARTS (and perhaps pySMARTS) in the near future.
+<img src="docs/images/silvana&christian.jpeg" width="400">
