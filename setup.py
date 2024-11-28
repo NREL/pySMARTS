@@ -37,7 +37,7 @@ setup(
     url='https://github.com/NREL/pySMARTS',
 
     # Author details
-    author='Silvana Ovaitt
+    author='Silvana Ovaitt',
     author_email='silvana.ovaitt@nrel.gov',
 
     # Choose your license
