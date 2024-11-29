@@ -2445,14 +2445,14 @@ def _smartsAll(CMNT, ISPR, SPR, ALTIT, HEIGHT, LATIT, IATMOS, ATMOS, RH, TAIR, S
         os.remove('smarts295.inp.txt')
     except:
         pass
-    try:
-        os.remove('smarts295.out.txt')
-    except:
-        pass  
-    try:       
-        os.remove('smarts295.ext.txt')
-    except:
-        pass
+    #try:
+    #    os.remove('smarts295.out.txt')
+    #except:
+    #    pass  
+    #try:       
+    #    os.remove('smarts295.ext.txt')
+    #except:
+    #    pass
     try:
         os.remove('smarts295.scn.txt')
     except:
